@@ -8,9 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["Kuba Suder"]
   spec.email = ["jakub.suder@gmail.com"]
 
-  spec.summary = "Write a short summary, because RubyGems requires one."
-  spec.description = "Write a longer description or delete this line."
+  spec.summary = "A minimal client of Bluesky/AtProto API"
+  spec.description = "A very simple client class that lets you log in to the Bluesky API and make any requests there."
   spec.homepage = "https://github.com/mackuba/minisky"
+
+  spec.license = "Zlib"
   spec.required_ruby_version = ">= 2.6.0"
 
   spec.metadata = {
