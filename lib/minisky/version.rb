@@ -1,5 +1,5 @@
-# frozen_string_literal: true
+require_relative 'minisky'
 
-module Minisky
+class Minisky
   VERSION = "0.1.0"
 end
