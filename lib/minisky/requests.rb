@@ -7,7 +7,7 @@ require 'open-uri'
 class Minisky
   module Requests
     def base_url
-      "https://#{@config['host']}/xrpc"
+      @base_url ||= "https://#{host}/xrpc"
     end
 
     def my_id
