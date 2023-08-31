@@ -158,7 +158,7 @@ describe Minisky do
     let(:response) {{ body: '{ "result": "ok" }' }}
 
     before do
-      stub_request(:post, %r(https://#{host}/xrpc/com.example.service.doStuff)).to_return(response)
+      stub_request(:post, "https://#{host}/xrpc/com.example.service.doStuff").to_return(response)
     end
 
     it 'should make a request to the given XRPC endpoint' do
@@ -222,6 +222,131 @@ describe Minisky do
 
       it 'should raise an error' do
         expect { subject.post_request('com.example.service.doStuff', nil) }.to raise_error(RuntimeError)
+      end
+    end
+  end
+
+  describe '#fetch_all' do
+    context 'when one page of items is returned' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return(body: '{ "items": ["one", "two", "three"] }')
+      end
+
+      it 'should make one request to the given endpoint' do
+        subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+      end
+
+      it 'should return the parsed items' do
+        result = subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+        result.should == ["one", "two", "three"]
+      end
+    end
+
+    context 'when more than one page of items is returned' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc111" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc111")
+          .to_return(body: '{ "items": ["four", "five"] }')
+      end
+
+      it 'should make multiple requests, passing the last cursor' do
+        subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc111").once
+      end
+
+      it 'should return all the parsed items collected from the responses' do
+        result = subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+        result.should == ["one", "two", "three", "four", "five"]
+      end
+    end
+
+    context 'when params are passed' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?type=post")
+          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc222" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?type=post&cursor=ccc222")
+          .to_return(body: '{ "items": ["four", "five"] }')
+      end
+
+      it 'should add the params to the url' do
+        subject.fetch_all('com.example.service.fetchAll', { type: 'post' }, field: 'items')
+
+        WebMock.should have_requested(:get,
+          "https://#{host}/xrpc/com.example.service.fetchAll?type=post").once
+        WebMock.should have_requested(:get,
+          "https://#{host}/xrpc/com.example.service.fetchAll?type=post&cursor=ccc222").once
+      end
+    end
+
+    context 'when authentication token is passed' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc333" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333")
+          .to_return(body: '{ "items": ["four", "five"] }')
+      end
+
+      it 'should add an authentication header' do
+        subject.fetch_all('com.example.service.fetchAll', nil, 'XXXX', field: 'items')
+
+        WebMock.should have_requested(:get,
+          "https://#{host}/xrpc/com.example.service.fetchAll").once
+          .with(headers: { 'Authorization' => 'Bearer XXXX' })
+        WebMock.should have_requested(:get,
+          "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
+          .with(headers: { 'Authorization' => 'Bearer XXXX' })
+      end
+    end
+
+    context 'when authentication token is not passed' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc333" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333")
+          .to_return(body: '{ "items": ["four", "five"] }')
+      end
+
+      it 'should not add an authentication header' do
+        subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+
+        WebMock.should_not have_requested(:get, %r(https://#{host}/xrpc/com.example.service.fetchAll))
+          .with(headers: { 'Authorization' => /.*/ })
+      end
+    end
+
+    context 'when break condition is passed' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "page1" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1")
+          .to_return(body: '{ "items": ["four", "five"], "cursor": "page2" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2")
+          .to_return(body: '{ "items": ["six"] }')
+      end
+
+      it 'should stop when a matching item is found' do
+        subject.fetch_all('com.example.service.fetchAll', nil, field: 'items', break_when: ->(x) { x =~ /u/ })
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1").once
+        WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2")
+      end
+
+      it 'should filter out matching items from the response' do
+        result = subject.fetch_all('com.example.service.fetchAll', nil, field: 'items', break_when: ->(x) { x =~ /u/ })
+        result.should == ["one", "two", "three", "five"]
       end
     end
   end

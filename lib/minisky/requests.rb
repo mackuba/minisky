@@ -59,6 +59,7 @@ class Minisky
 
     def fetch_all(method, params, auth = nil, field:, break_when: ->(x) { false }, progress: true)
       data = []
+      params = {} if params.nil?
 
       loop do
         print '.' if progress
