@@ -1,3 +1,4 @@
 .bundle
 .rspec_status
+*.yml
 Gemfile.lock
