@@ -26,10 +26,8 @@ class Minisky
       @config['refresh_token']
     end
 
-    def get_request(method, params = nil, auth = nil)
-      headers = {}
-      headers['Authorization'] = "Bearer #{auth}" if auth
-
+    def get_request(method, params = nil, auth: true)
+      headers = authentication_header(auth)
       url = "#{base_url}/#{method}"
 
       if params && !params.empty?
@@ -45,10 +43,8 @@ class Minisky
       JSON.parse(URI.open(url, headers).read)
     end
 
-    def post_request(method, params, auth = nil)
-      headers = { "Content-Type" => "application/json" }
-      headers['Authorization'] = "Bearer #{auth}" if auth
-
+    def post_request(method, params, auth: true)
+      headers = authentication_header(auth).merge({ "Content-Type" => "application/json" })
       body = params ? params.to_json : ''
 
       response = Net::HTTP.post(URI("#{base_url}/#{method}"), body, headers)
@@ -57,14 +53,14 @@ class Minisky
       JSON.parse(response.body)
     end
 
-    def fetch_all(method, params, auth = nil, field:, break_when: ->(x) { false }, progress: true)
+    def fetch_all(method, params, field:, auth: true, break_when: ->(x) { false }, progress: true)
       data = []
       params = {} if params.nil?
 
       loop do
         print '.' if progress
 
-        response = get_request(method, params, auth)
+        response = get_request(method, params, auth: auth)
         records = response[field]
         cursor = response['cursor']
 
@@ -82,7 +78,7 @@ class Minisky
         log_in
       else
         begin
-          get_request('com.atproto.server.getSession', nil, access_token)
+          get_request('com.atproto.server.getSession')
         rescue OpenURI::HTTPError
           perform_token_refresh
         end
@@ -93,7 +89,7 @@ class Minisky
       json = post_request('com.atproto.server.createSession', {
         identifier: @config['ident'],
         password: @config['pass']
-      })
+      }, auth: false)
 
       @config['did'] = json['did']
       @config['access_token'] = json['accessJwt']
@@ -102,10 +98,22 @@ class Minisky
     end
 
     def perform_token_refresh
-      json = post_request('com.atproto.server.refreshSession', nil, refresh_token)
+      json = post_request('com.atproto.server.refreshSession', nil, auth: refresh_token)
       @config['access_token'] = json['accessJwt']
       @config['refresh_token'] = json['refreshJwt']
       save_config
+    end
+
+    private
+
+    def authentication_header(auth)
+      if auth.is_a?(String)
+        { 'Authorization' => "Bearer #{auth}" }
+      elsif auth
+        { 'Authorization' => "Bearer #{access_token}" }
+      else
+        {}
+      end
     end
   end
 

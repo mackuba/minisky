@@ -18,7 +18,7 @@ class CustomJSONClient
   end
 end
 
-describe "custom client that includes Requests" do
+describe "custom client" do
   include FakeFS::SpecHelpers
 
   before do
