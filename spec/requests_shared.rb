@@ -103,6 +103,15 @@ shared_examples "Requests" do |host|
       end
     end
 
+    context 'with nil params' do
+      it 'should not append anything to the URL' do
+        subject.get_request('com.example.service.getStuff', nil)
+
+        WebMock.should have_requested(:get,
+         "https://#{host}/xrpc/com.example.service.getStuff").once
+      end
+    end
+
     context 'with an array passed as param' do
       it 'should append one copy of the param for each item' do
         subject.get_request('com.example.service.getStuff', { profiles: ['john.foo', 'spam.zip'], reposts: true })
@@ -148,19 +157,19 @@ shared_examples "Requests" do |host|
     end
 
     it 'should make a request to the given XRPC endpoint' do
-      subject.post_request('com.example.service.doStuff', nil)
+      subject.post_request('com.example.service.doStuff')
 
       WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
     end
 
     it 'should return parsed JSON' do
-      result = subject.post_request('com.example.service.doStuff', nil)
+      result = subject.post_request('com.example.service.doStuff')
 
       result.should == { 'result' => 'ok' }
     end
 
     it 'should set content type to application/json' do
-      subject.post_request('com.example.service.doStuff', nil)
+      subject.post_request('com.example.service.doStuff')
 
       WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
         .with(headers: { 'Content-Type' => 'application/json' })
@@ -168,7 +177,7 @@ shared_examples "Requests" do |host|
 
     context 'with an explicit auth token' do
       it 'should pass the token in the header' do
-        subject.post_request('com.example.service.doStuff', nil, auth: 'qwerty99')
+        subject.post_request('com.example.service.doStuff', auth: 'qwerty99')
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
           .with(headers: { 'Authorization' => 'Bearer qwerty99' })
@@ -177,7 +186,7 @@ shared_examples "Requests" do |host|
 
     context 'without an auth parameter' do
       it 'should use the access token' do
-        subject.post_request('com.example.service.doStuff', nil)
+        subject.post_request('com.example.service.doStuff')
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
           .with(headers: { 'Authorization' => 'Bearer aatoken' })
@@ -186,7 +195,7 @@ shared_examples "Requests" do |host|
 
     context 'with auth = false' do
       it 'should not set the authorization header' do
-        subject.post_request('com.example.service.doStuff', nil, auth: false)
+        subject.post_request('com.example.service.doStuff', auth: false)
 
         WebMock.should_not have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff")
           .with(headers: { 'Authorization' => /.*/ })
@@ -203,7 +212,16 @@ shared_examples "Requests" do |host|
       end
     end
 
-    context 'if params are nil' do
+    context 'if params are not passed' do
+      it 'should send an empty body' do
+        subject.post_request('com.example.service.doStuff')
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: '')
+      end
+    end
+
+    context 'if params are an explicit nil' do
       it 'should send an empty body' do
         subject.post_request('com.example.service.doStuff', nil)
 
@@ -216,7 +234,7 @@ shared_examples "Requests" do |host|
       let(:response) {{ body: '{ "error": "message" }', status: 403 }}
 
       it 'should raise an error' do
-        expect { subject.post_request('com.example.service.doStuff', nil) }.to raise_error(RuntimeError)
+        expect { subject.post_request('com.example.service.doStuff') }.to raise_error(RuntimeError)
       end
     end
   end
@@ -229,13 +247,13 @@ shared_examples "Requests" do |host|
       end
 
       it 'should make one request to the given endpoint' do
-        subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+        subject.fetch_all('com.example.service.fetchAll', field: 'items')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
       end
 
       it 'should return the parsed items' do
-        result = subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+        result = subject.fetch_all('com.example.service.fetchAll', field: 'items')
         result.should == ["one", "two", "three"]
       end
     end
@@ -250,14 +268,14 @@ shared_examples "Requests" do |host|
       end
 
       it 'should make multiple requests, passing the last cursor' do
-        subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+        subject.fetch_all('com.example.service.fetchAll', field: 'items')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc111").once
       end
 
       it 'should return all the parsed items collected from the responses' do
-        result = subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+        result = subject.fetch_all('com.example.service.fetchAll', field: 'items')
         result.should == ["one", "two", "three", "four", "five"]
       end
     end
@@ -281,6 +299,25 @@ shared_examples "Requests" do |host|
       end
     end
 
+    context 'when params are an explicit nil' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc222" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc222")
+          .to_return(body: '{ "items": ["four", "five"] }')
+      end
+
+      it 'should not add anything to the url' do
+        subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+
+        WebMock.should have_requested(:get,
+          "https://#{host}/xrpc/com.example.service.fetchAll").once
+        WebMock.should have_requested(:get,
+          "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc222").once
+      end
+    end
+
     describe '(auth token)' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
@@ -292,7 +329,7 @@ shared_examples "Requests" do |host|
 
       context 'with an explicit token' do
         it 'should pass the token in the header' do
-          subject.fetch_all('com.example.service.fetchAll', nil, auth: 'XXXX', field: 'items')
+          subject.fetch_all('com.example.service.fetchAll', auth: 'XXXX', field: 'items')
 
           WebMock.should have_requested(:get,
             "https://#{host}/xrpc/com.example.service.fetchAll").once
@@ -305,7 +342,7 @@ shared_examples "Requests" do |host|
 
       context 'without an auth parameter' do
         it 'should use the access token' do
-          subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+          subject.fetch_all('com.example.service.fetchAll', field: 'items')
 
           WebMock.should have_requested(:get,
             "https://#{host}/xrpc/com.example.service.fetchAll").once
@@ -318,7 +355,7 @@ shared_examples "Requests" do |host|
 
       context 'with auth = false' do
         it 'should not add an authentication header' do
-          subject.fetch_all('com.example.service.fetchAll', nil, field: 'items', auth: false)
+          subject.fetch_all('com.example.service.fetchAll', field: 'items', auth: false)
 
           WebMock.should_not have_requested(:get, %r(https://#{host}/xrpc/com.example.service.fetchAll))
             .with(headers: { 'Authorization' => /.*/ })
@@ -339,7 +376,7 @@ shared_examples "Requests" do |host|
       end
 
       it 'should stop when a matching item is found' do
-        subject.fetch_all('com.example.service.fetchAll', nil, field: 'items', break_when: ->(x) { x =~ /u/ })
+        subject.fetch_all('com.example.service.fetchAll', field: 'items', break_when: ->(x) { x =~ /u/ })
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1").once
@@ -347,7 +384,7 @@ shared_examples "Requests" do |host|
       end
 
       it 'should filter out matching items from the response' do
-        result = subject.fetch_all('com.example.service.fetchAll', nil, field: 'items', break_when: ->(x) { x =~ /u/ })
+        result = subject.fetch_all('com.example.service.fetchAll', field: 'items', break_when: ->(x) { x =~ /u/ })
         result.should == ["one", "two", "three", "five"]
       end
     end

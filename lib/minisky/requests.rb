@@ -43,7 +43,7 @@ class Minisky
       JSON.parse(URI.open(url, headers).read)
     end
 
-    def post_request(method, params, auth: true)
+    def post_request(method, params = nil, auth: true)
       headers = authentication_header(auth).merge({ "Content-Type" => "application/json" })
       body = params ? params.to_json : ''
 
@@ -53,7 +53,7 @@ class Minisky
       JSON.parse(response.body)
     end
 
-    def fetch_all(method, params, field:, auth: true, break_when: ->(x) { false }, progress: true)
+    def fetch_all(method, params = nil, field:, auth: true, break_when: ->(x) { false }, progress: true)
       data = []
       params = {} if params.nil?
 
@@ -98,7 +98,7 @@ class Minisky
     end
 
     def perform_token_refresh
-      json = post_request('com.atproto.server.refreshSession', nil, auth: refresh_token)
+      json = post_request('com.atproto.server.refreshSession', auth: refresh_token)
       @config['access_token'] = json['accessJwt']
       @config['refresh_token'] = json['refreshJwt']
       save_config
