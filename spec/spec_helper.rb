@@ -4,6 +4,8 @@ require 'pp' # needs to be included before fakefs
 require 'fakefs/spec_helpers'
 require 'webmock/rspec'
 
+require 'requests_shared'
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
