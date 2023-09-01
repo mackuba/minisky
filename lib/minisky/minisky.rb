@@ -1,17 +1,18 @@
 require 'yaml'
 
 class Minisky
-  CONFIG_FILE = 'bluesky.yml'
+  DEFAULT_CONFIG_FILE = 'bluesky.yml'
 
   attr_reader :host
 
-  def initialize(host)
+  def initialize(host, config_file = DEFAULT_CONFIG_FILE)
     @host = host
-    @config = YAML.load(File.read(CONFIG_FILE))
+    @config_file = config_file
+    @config = YAML.load(File.read(@config_file))
   end
 
   def save_config
-    File.write(CONFIG_FILE, YAML.dump(@config))
+    File.write(@config_file, YAML.dump(@config))
   end
 end
 
