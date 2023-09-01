@@ -77,6 +77,18 @@ class Minisky
       data.reject { |x| break_when.call(x) }
     end
 
+    def check_access
+      if !access_token || !refresh_token || !my_did
+        log_in
+      else
+        begin
+          get_request('com.atproto.server.getSession', nil, access_token)
+        rescue OpenURI::HTTPError
+          perform_token_refresh
+        end
+      end
+    end
+
     def log_in
       json = post_request('com.atproto.server.createSession', {
         identifier: @config['ident'],
