@@ -416,6 +416,46 @@ shared_examples "Requests" do |host|
           }.to output('').to_stdout
         end
       end
+
+      context 'when it is passed and a default is set' do
+        it 'should use the param version' do
+          subject.default_progress = '@'
+
+          expect {
+            subject.fetch_all('com.example.service.fetchAll', field: 'items', progress: '#')
+          }.to output('###').to_stdout
+        end
+      end
+
+      context 'when it is not passed and a default is set' do
+        it 'should use the default version' do
+          subject.default_progress = '$'
+
+          expect {
+            subject.fetch_all('com.example.service.fetchAll', field: 'items')
+          }.to output('$$$').to_stdout
+        end
+      end
+
+      context 'when default is set and nil is passed' do
+        it 'should not output anything' do
+          subject.default_progress = '$'
+
+          expect {
+            subject.fetch_all('com.example.service.fetchAll', field: 'items', progress: nil)
+          }.to output('').to_stdout
+        end
+      end
+
+      context 'when default is set and false is passed' do
+        it 'should not output anything' do
+          subject.default_progress = '$'
+
+          expect {
+            subject.fetch_all('com.example.service.fetchAll', field: 'items', progress: false)
+          }.to output('').to_stdout
+        end
+      end
     end
   end
 end

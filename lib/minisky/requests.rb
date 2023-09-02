@@ -7,6 +7,8 @@ require 'uri'
 
 class Minisky
   module Requests
+    attr_accessor :default_progress
+
     def base_url
       @base_url ||= "https://#{host}/xrpc"
     end
@@ -48,7 +50,7 @@ class Minisky
       JSON.parse(response.body)
     end
 
-    def fetch_all(method, params = nil, field:, auth: true, break_when: nil, progress: nil)
+    def fetch_all(method, params = nil, field:, auth: true, break_when: nil, progress: @default_progress)
       data = []
       params = {} if params.nil?
 
