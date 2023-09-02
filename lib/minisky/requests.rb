@@ -48,12 +48,12 @@ class Minisky
       JSON.parse(response.body)
     end
 
-    def fetch_all(method, params = nil, field:, auth: true, break_when: nil, progress: true)
+    def fetch_all(method, params = nil, field:, auth: true, break_when: nil, progress: nil)
       data = []
       params = {} if params.nil?
 
       loop do
-        print '.' if progress
+        print(progress) if progress
 
         response = get_request(method, params, auth: auth)
         records = response[field]

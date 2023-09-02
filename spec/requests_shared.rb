@@ -388,5 +388,34 @@ shared_examples "Requests" do |host|
         result.should == ["one", "two", "three", "five"]
       end
     end
+
+    describe 'progress param' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return(body: '{ "items": ["one"], "cursor": "page1" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1")
+          .to_return(body: '{ "items": ["two"], "cursor": "page2" }')
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2")
+          .to_return(body: '{ "items": ["three"] }')
+      end
+
+      context 'when it is passed' do
+        it 'should print the progress character for each request' do
+          expect {
+            subject.fetch_all('com.example.service.fetchAll', field: 'items', progress: '-=')
+          }.to output('-=-=-=').to_stdout
+        end
+      end
+
+      context 'when it is not passed' do
+        it 'should not print anything' do
+          expect {
+            subject.fetch_all('com.example.service.fetchAll', field: 'items')
+          }.to output('').to_stdout
+        end
+      end
+    end
   end
 end
