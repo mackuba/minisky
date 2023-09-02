@@ -407,6 +407,102 @@ shared_examples "Requests" do |host|
       end
     end
 
+    context 'when max pages limit is passed' do
+      before do
+        stub_request(:get, %r(https://#{host}/xrpc/com.example.service.fetchAll(\?.*)?))
+          .to_return { |req|
+            params = req.uri.query_values || {}
+            page = params['cursor'].to_s.gsub(/page/, '').to_i
+            { body: JSON.generate({ items: ["item#{page}"], cursor: "page#{page + 1}" }) }
+          }
+      end
+
+      context 'and break_when is not passed' do
+        it 'should stop at n-th page' do
+          subject.fetch_all('com.example.service.fetchAll', field: 'items', max_pages: 5)
+
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page3").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page4").once
+          WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page5")
+        end
+
+        it 'should collect all items' do
+          result = subject.fetch_all('com.example.service.fetchAll', field: 'items', max_pages: 5)
+          result.should == ["item0", "item1", "item2", "item3", "item4"]
+        end
+      end
+
+      context 'and break_when matches earlier' do
+        it 'should stop at the page where break_when matches' do
+          subject.fetch_all('com.example.service.fetchAll', field: 'items', max_pages: 5,
+            break_when: ->(x) { x =~ /3/ })
+
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page3").once
+          WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page4")
+          WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page5")
+        end
+
+        it 'should exclude items that matched break_when' do
+          result = subject.fetch_all('com.example.service.fetchAll', field: 'items', max_pages: 5,
+            break_when: ->(x) { x =~ /3/ })
+
+          result.should == ["item0", "item1", "item2"]
+        end
+      end
+
+      context "and break_when doesn't match earlier" do
+        it 'should stop at the n-th page' do
+          subject.fetch_all('com.example.service.fetchAll', field: 'items', max_pages: 6,
+            break_when: ->(x) { x =~ /8/ })
+
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page3").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page4").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page5").once
+          WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page6")
+          WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page7")
+        end
+
+        it 'should include all items up to n-th page' do
+          result = subject.fetch_all('com.example.service.fetchAll', field: 'items', max_pages: 6,
+            break_when: ->(x) { x =~ /8/ })
+
+          result.should == ["item0", "item1", "item2", "item3", "item4", "item5"]
+        end
+      end
+
+      context "and break_when matches on the last page" do
+        it 'should stop at the n-th page' do
+          subject.fetch_all('com.example.service.fetchAll', field: 'items', max_pages: 6,
+            break_when: ->(x) { x =~ /5/ })
+
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page3").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page4").once
+          WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page5").once
+          WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page6")
+          WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page7")
+        end
+
+        it 'should exclude the items matching on the last page' do
+          result = subject.fetch_all('com.example.service.fetchAll', field: 'items', max_pages: 6,
+            break_when: ->(x) { x =~ /5/ })
+
+          result.should == ["item0", "item1", "item2", "item3", "item4"]
+        end
+      end
+    end
+
     describe 'progress param' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")

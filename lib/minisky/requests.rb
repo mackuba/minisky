@@ -52,9 +52,11 @@ class Minisky
       JSON.parse(response.body)
     end
 
-    def fetch_all(method, params = nil, field:, auth: true, break_when: nil, progress: @default_progress)
+    def fetch_all(method, params = nil, field:,
+                  auth: true, break_when: nil, max_pages: nil, progress: @default_progress)
       data = []
       params = {} if params.nil?
+      pages = 0
 
       loop do
         print(progress) if progress
@@ -65,8 +67,10 @@ class Minisky
 
         data.concat(records)
         params[:cursor] = cursor
+        pages += 1
 
-        break if cursor.nil? || records.empty? || break_when && records.any? { |x| break_when.call(x) }
+        break if !cursor || records.empty? || pages == max_pages
+        break if break_when && records.any? { |x| break_when.call(x) }
       end
 
       data.delete_if { |x| break_when.call(x) } if break_when
