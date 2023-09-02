@@ -90,22 +90,27 @@ class Minisky
     end
 
     def log_in
-      json = post_request('com.atproto.server.createSession', {
+      data = {
         identifier: user.id,
         password: user.pass
-      }, auth: false)
+      }
+
+      json = post_request('com.atproto.server.createSession', data, auth: false)
 
       config['did'] = json['did']
       config['access_token'] = json['accessJwt']
       config['refresh_token'] = json['refreshJwt']
+
       save_config
       json
     end
 
     def perform_token_refresh
       json = post_request('com.atproto.server.refreshSession', auth: user.refresh_token)
+
       config['access_token'] = json['accessJwt']
       config['refresh_token'] = json['refreshJwt']
+
       save_config
       json
     end
