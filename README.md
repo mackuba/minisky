@@ -21,7 +21,7 @@ Or alternatively, add it to the `Gemfile` file for Bundler:
 First, you need to create a `.yml` config file (by default, `bluesky.yml`) with the authentication data. It should look like this:
 
 ```yaml
-ident: my.bsky.username
+id: my.bsky.username
 pass: very-secret-password
 ```
 
@@ -42,18 +42,18 @@ Now, you can make requests to the Bluesky API using `get_request` and `post_requ
 
 ```rb
 bsky.get_request('com.atproto.repo.listRecords', {
-  repo: bsky.my_did,
+  repo: bsky.user.did,
   collection: 'app.bsky.feed.like'
-}, bsky.access_token)
+})
 
 bsky.post_request('com.atproto.repo.createRecord', {
-  repo: bsky.my_did,
+  repo: bsky.user.did,
   collection: 'app.bsky.feed.post',
   record: {
     text: "Hello world!",
     createdAt: Time.now.iso8601
   }
-}, bsky.access_token)
+})
 ```
 
 You can also use `#fetch_all` to load multiple paginated responses and collect all returned items on a single list (you need to pass the name of the field that contains the items in the response). Optionally, you can also specify a break condition when fetching should be stopped, e.g. to fetch all of your posts from the last 30 days, but not earlier:
@@ -61,8 +61,7 @@ You can also use `#fetch_all` to load multiple paginated responses and collect a
 ```rb
 time_limit = Time.now - 86400 * 30
 bsky.fetch_all('com.atproto.repo.listRecords',
-  { repo: bsky.my_did, collection: 'app.bsky.feed.post' },
-  bsky.access_token,
+  { repo: bsky.user.did, collection: 'app.bsky.feed.post' },
   field: 'records',
   break_when: ->(x) { Time.parse(x['value']['createdAt']) < time_limit })
 ```
@@ -81,6 +80,8 @@ Alternatively, instead of using the `Minisky` class, you can make your own class
 ```rb
 class BlueskyClient
   include Minisky::Requests
+
+  attr_reader :config
 
   def initialize(config_file)
     @config_file = config_file
