@@ -41,9 +41,9 @@ describe Minisky do
     let(:reloaded_config) { YAML.load(File.read('myconfig.yml')) }
 
     it 'should load config from a file' do
-      subject.my_id.should == 'john.foo'
-      subject.access_token.should == 'aatoken'
-      subject.refresh_token.should == 'rrtoken'
+      subject.user.id.should == 'john.foo'
+      subject.user.access_token.should == 'aatoken'
+      subject.user.refresh_token.should == 'rrtoken'
     end
 
     describe '#log_in' do

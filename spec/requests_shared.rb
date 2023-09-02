@@ -2,9 +2,15 @@ shared_examples "Requests" do |host|
   let(:host) { host }
 
   it 'should load config from a file' do
-    subject.my_id.should == 'john.foo'
-    subject.access_token.should == 'aatoken'
-    subject.refresh_token.should == 'rrtoken'
+    subject.user.id.should == 'john.foo'
+    subject.user.access_token.should == 'aatoken'
+    subject.user.refresh_token.should == 'rrtoken'
+  end
+
+  it 'should have a user object wrapping the config' do
+    subject.config['something'] = 'some value'
+
+    subject.user.something.should == 'some value'
   end
 
   describe '#log_in' do

@@ -6,6 +6,20 @@ require 'open-uri'
 require 'uri'
 
 class Minisky
+  class User
+    def initialize(config)
+      @config = config
+    end
+
+    def logged_in?
+      !!(access_token && refresh_token)
+    end
+
+    def method_missing(name)
+      @config[name.to_s]
+    end
+  end
+
   module Requests
     attr_accessor :default_progress
 
@@ -13,20 +27,8 @@ class Minisky
       @base_url ||= "https://#{host}/xrpc"
     end
 
-    def my_id
-      config['id']
-    end
-
-    def my_did
-      config['did']
-    end
-
-    def access_token
-      config['access_token']
-    end
-
-    def refresh_token
-      config['refresh_token']
+    def user
+      @user ||= User.new(config)
     end
 
     def get_request(method, params = nil, auth: true)
@@ -72,7 +74,7 @@ class Minisky
     end
 
     def check_access
-      if !access_token || !refresh_token || !my_did
+      if !user.logged_in?
         log_in
       else
         begin
@@ -85,8 +87,8 @@ class Minisky
 
     def log_in
       json = post_request('com.atproto.server.createSession', {
-        identifier: my_id,
-        password: config['pass']
+        identifier: user.id,
+        password: user.pass
       }, auth: false)
 
       config['did'] = json['did']
@@ -97,7 +99,7 @@ class Minisky
     end
 
     def perform_token_refresh
-      json = post_request('com.atproto.server.refreshSession', auth: refresh_token)
+      json = post_request('com.atproto.server.refreshSession', auth: user.refresh_token)
       config['access_token'] = json['accessJwt']
       config['refresh_token'] = json['refreshJwt']
       save_config
@@ -110,7 +112,7 @@ class Minisky
       if auth.is_a?(String)
         { 'Authorization' => "Bearer #{auth}" }
       elsif auth
-        { 'Authorization' => "Bearer #{access_token}" }
+        { 'Authorization' => "Bearer #{user.access_token}" }
       else
         {}
       end
