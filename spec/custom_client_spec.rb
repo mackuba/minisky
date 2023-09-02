@@ -5,6 +5,8 @@ class CustomJSONClient
 
   include Minisky::Requests
 
+  attr_reader :config
+
   def initialize
     @config = JSON.parse(File.read(CONFIG_FILE))
   end

@@ -14,19 +14,19 @@ class Minisky
     end
 
     def my_id
-      @config['id']
+      config['id']
     end
 
     def my_did
-      @config['did']
+      config['did']
     end
 
     def access_token
-      @config['access_token']
+      config['access_token']
     end
 
     def refresh_token
-      @config['refresh_token']
+      config['refresh_token']
     end
 
     def get_request(method, params = nil, auth: true)
@@ -86,20 +86,20 @@ class Minisky
     def log_in
       json = post_request('com.atproto.server.createSession', {
         identifier: my_id,
-        password: @config['pass']
+        password: config['pass']
       }, auth: false)
 
-      @config['did'] = json['did']
-      @config['access_token'] = json['accessJwt']
-      @config['refresh_token'] = json['refreshJwt']
+      config['did'] = json['did']
+      config['access_token'] = json['accessJwt']
+      config['refresh_token'] = json['refreshJwt']
       save_config
       json
     end
 
     def perform_token_refresh
       json = post_request('com.atproto.server.refreshSession', auth: refresh_token)
-      @config['access_token'] = json['accessJwt']
-      @config['refresh_token'] = json['refreshJwt']
+      config['access_token'] = json['accessJwt']
+      config['refresh_token'] = json['refreshJwt']
       save_config
       json
     end
