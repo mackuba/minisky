@@ -3,6 +3,7 @@ require_relative 'minisky'
 require 'json'
 require 'net/http'
 require 'open-uri'
+require 'uri'
 
 class Minisky
   module Requests
@@ -28,16 +29,10 @@ class Minisky
 
     def get_request(method, params = nil, auth: true)
       headers = authentication_header(auth)
-      url = "#{base_url}/#{method}"
+      url = URI("#{base_url}/#{method}")
 
       if params && !params.empty?
-        url += "?" + params.map { |k, v|
-          if v.is_a?(Array)
-            v.map { |x| "#{k}=#{x}" }.join('&')
-          else
-            "#{k}=#{v}"
-          end
-        }.join('&')
+        url.query = URI.encode_www_form(params)
       end
 
       JSON.parse(URI.open(url, headers).read)
