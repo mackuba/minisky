@@ -8,7 +8,7 @@ describe Minisky do
   context 'with a default config file name' do
     before do
       File.write('bluesky.yml', %(
-        ident: john.foo
+        id: john.foo
         pass: hunter2
         access_token: aatoken
         refresh_token: rrtoken
@@ -29,7 +29,7 @@ describe Minisky do
   context 'with a custom config file name' do
     before do
       File.write('myconfig.yml', %(
-        ident: john.foo
+        id: john.foo
         pass: hunter2
         access_token: aatoken
         refresh_token: rrtoken

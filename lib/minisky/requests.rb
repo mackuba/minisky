@@ -14,7 +14,7 @@ class Minisky
     end
 
     def my_id
-      @config['ident']
+      @config['id']
     end
 
     def my_did
@@ -85,7 +85,7 @@ class Minisky
 
     def log_in
       json = post_request('com.atproto.server.createSession', {
-        identifier: @config['ident'],
+        identifier: my_id,
         password: @config['pass']
       }, auth: false)
 

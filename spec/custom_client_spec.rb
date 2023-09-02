@@ -23,7 +23,7 @@ describe "custom client" do
 
   before do
     File.write('test.json', %({
-      "ident": "john.foo",
+      "id": "john.foo",
       "pass": "hunter2",
       "access_token": "aatoken",
       "refresh_token": "rrtoken"
