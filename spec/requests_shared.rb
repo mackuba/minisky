@@ -8,13 +8,15 @@ shared_examples "Requests" do |host|
   end
 
   describe '#log_in' do
+    let(:response_json) { JSON.generate(
+      "did": "did:plc:abracadabra",
+      "accessJwt": "aaaa1234",
+      "refreshJwt": "rrrr1234"
+    )}
+
     before do
       stub_request(:post, "https://#{host}/xrpc/com.atproto.server.createSession")
-        .to_return(body: %({
-          "did": "did:plc:abracadabra",
-          "accessJwt": "aaaa1234",
-          "refreshJwt": "rrrr1234"
-        }))
+        .to_return(body: response_json)
     end
 
     it 'should make a request to com.atproto.server.createSession' do
@@ -43,15 +45,21 @@ shared_examples "Requests" do |host|
       reloaded_config['access_token'].should == 'aaaa1234'
       reloaded_config['refresh_token'].should == 'rrrr1234'
     end
+
+    it 'should return the response json' do
+      subject.log_in.should == JSON.parse(response_json)
+    end
   end
 
   describe '#perform_token_refresh' do
+    let(:response_json) { JSON.generate(
+      "accessJwt": "aaaa1234",
+      "refreshJwt": "rrrr1234"      
+    )}
+
     before do
       stub_request(:post, "https://#{host}/xrpc/com.atproto.server.refreshSession")
-        .to_return(body: %({
-          "accessJwt": "aaaa1234",
-          "refreshJwt": "rrrr1234"
-        }))
+        .to_return(body: response_json)
     end
 
     it 'should make a request to com.atproto.server.refreshSession' do
@@ -73,6 +81,10 @@ shared_examples "Requests" do |host|
 
       reloaded_config['access_token'].should == 'aaaa1234'
       reloaded_config['refresh_token'].should == 'rrrr1234'
+    end
+
+    it 'should return the response json' do
+      subject.perform_token_refresh.should == JSON.parse(response_json)
     end
   end
 

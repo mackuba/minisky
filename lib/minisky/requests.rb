@@ -93,6 +93,7 @@ class Minisky
       @config['access_token'] = json['accessJwt']
       @config['refresh_token'] = json['refreshJwt']
       save_config
+      json
     end
 
     def perform_token_refresh
@@ -100,6 +101,7 @@ class Minisky
       @config['access_token'] = json['accessJwt']
       @config['refresh_token'] = json['refreshJwt']
       save_config
+      json
     end
 
     private
