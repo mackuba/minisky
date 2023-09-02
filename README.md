@@ -25,7 +25,9 @@ id: my.bsky.username
 pass: very-secret-password
 ```
 
-It's recommended that you use the "app password" that you can create in the settings instead of your main account password. After you log in, this file will also be used to store your access & request tokens and DID.
+The `id` can be either your handle, or your DID, or the email you've used to sign up. It's recommended that you use the "app password" that you can create in the settings instead of your main account password.
+
+After you log in, this file will also be used to store your access & request tokens and DID. The data in the config file can be accessed through a `user` wrapper property that exposes them as methods, e.g. the password is available as `user.pass` and the DID as `user.did`.
 
 Next, create the Minisky client instance, passing the server name (at the moment there is only one server at `bsky.social`, but there will be more once federation support goes live):
 
@@ -56,18 +58,40 @@ bsky.post_request('com.atproto.repo.createRecord', {
 })
 ```
 
-You can also use `#fetch_all` to load multiple paginated responses and collect all returned items on a single list (you need to pass the name of the field that contains the items in the response). Optionally, you can also specify a break condition when fetching should be stopped, e.g. to fetch all of your posts from the last 30 days, but not earlier:
+The requests use the saved access token for authentication automatically. You can also pass `auth: false` or `auth: nil` to not send any authentication headers, or `auth: sometoken` to use a specific other token.
+
+The third useful method you can use is `#fetch_all`, which loads multiple paginated responses and collects all returned items on a single list (you need to pass the name of the field that contains the items in the response). Optionally, you can also specify a limit of pages to load as `max_pages: n`, or a break condition `break_when` to stop fetching when any item matches it. You can use it to e.g. to fetch all of your posts from the last 30 days, but not earlier:
 
 ```rb
 time_limit = Time.now - 86400 * 30
+
 bsky.fetch_all('com.atproto.repo.listRecords',
   { repo: bsky.user.did, collection: 'app.bsky.feed.post' },
   field: 'records',
+  max_pages: 10,
   break_when: ->(x) { Time.parse(x['value']['createdAt']) < time_limit })
 ```
 
+There is also a `progress` option you can use to print some kind of character for every page load. E.g. pass `progress: '.'` to print dots as the pages are loading:
+
+```rb
+bsky.fetch_all('com.atproto.repo.listRecords',
+  { repo: bsky.user.did, collection: 'app.bsky.feed.like' },
+  field: 'records',
+  progress: '.')
+```
+
+This will output a line like this:
+
+```
+.................
+```
 
 ## Customization
+
+The `Minisky` client currently supports one configuration option:
+
+- `default_progress` - a progress character to automatically use for `#fetch_all` calls (default: `nil`)
 
 When creating the `Minisky` instance, you can pass a name of the YAML config file to use instead of the default:
 
@@ -105,6 +129,12 @@ bsky = BlueskyClient.new('config/access.json')
 bsky.check_access
 bsky.get_request(...)
 ```
+
+The class needs to provide:
+
+- a `host` method or property that returns the hostname of the server
+- a `config` property which returns a hash or a hash-like object with the configuration and user data - it needs to support reading and writing arbitrary key-value pairs with string keys
+- a `save_config` method which persists the config object to the chosen storage
 
 
 ## Credits
