@@ -48,7 +48,7 @@ class Minisky
       JSON.parse(response.body)
     end
 
-    def fetch_all(method, params = nil, field:, auth: true, break_when: ->(x) { false }, progress: true)
+    def fetch_all(method, params = nil, field:, auth: true, break_when: nil, progress: true)
       data = []
       params = {} if params.nil?
 
@@ -62,10 +62,11 @@ class Minisky
         data.concat(records)
         params[:cursor] = cursor
 
-        break if cursor.nil? || records.empty? || records.any? { |x| break_when.call(x) }
+        break if cursor.nil? || records.empty? || break_when && records.any? { |x| break_when.call(x) }
       end
 
-      data.reject { |x| break_when.call(x) }
+      data.delete_if { |x| break_when.call(x) } if break_when
+      data
     end
 
     def check_access
