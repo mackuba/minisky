@@ -22,7 +22,11 @@ class Minisky
 
   module Requests
     attr_accessor :default_progress
-    attr_accessor :default_auth
+    attr_writer :default_auth
+
+    def default_auth
+      instance_variable_defined?('@default_auth') ? @default_auth : true
+    end
 
     def base_url
       @base_url ||= "https://#{host}/xrpc"
@@ -32,7 +36,7 @@ class Minisky
       @user ||= User.new(config)
     end
 
-    def get_request(method, params = nil, auth: default_auth_mode)
+    def get_request(method, params = nil, auth: default_auth)
       headers = authentication_header(auth)
       url = URI("#{base_url}/#{method}")
 
@@ -43,7 +47,7 @@ class Minisky
       JSON.parse(URI.open(url, headers).read)
     end
 
-    def post_request(method, params = nil, auth: default_auth_mode)
+    def post_request(method, params = nil, auth: default_auth)
       headers = authentication_header(auth).merge({ "Content-Type" => "application/json" })
       body = params ? params.to_json : ''
 
@@ -54,7 +58,7 @@ class Minisky
     end
 
     def fetch_all(method, params = nil, field:,
-                  auth: default_auth_mode, break_when: nil, max_pages: nil, progress: @default_progress)
+                  auth: default_auth, break_when: nil, max_pages: nil, progress: @default_progress)
       data = []
       params = {} if params.nil?
       pages = 0
@@ -117,10 +121,6 @@ class Minisky
     end
 
     private
-
-    def default_auth_mode
-      instance_variable_defined?('@default_auth') ? @default_auth : true
-    end
 
     def authentication_header(auth)
       if auth.is_a?(String)
