@@ -1,8 +1,10 @@
 require_relative 'minisky'
 require_relative 'errors'
 
+require 'base64'
 require 'json'
 require 'net/http'
+require 'time'
 require 'uri'
 
 class Minisky
@@ -23,9 +25,14 @@ class Minisky
   module Requests
     attr_accessor :default_progress
     attr_writer :send_auth_headers
+    attr_writer :auto_manage_tokens
 
     def send_auth_headers
       instance_variable_defined?('@send_auth_headers') ? @send_auth_headers : true
+    end
+
+    def auto_manage_tokens
+      instance_variable_defined?('@auto_manage_tokens') ? @auto_manage_tokens : true
     end
 
     def base_url
@@ -37,6 +44,8 @@ class Minisky
     end
 
     def get_request(method, params = nil, auth: default_auth_mode)
+      check_access if auto_manage_tokens && auth == true
+
       headers = authentication_header(auth)
       url = URI("#{base_url}/#{method}")
 
@@ -49,6 +58,8 @@ class Minisky
     end
 
     def post_request(method, params = nil, auth: default_auth_mode)
+      check_access if auto_manage_tokens && auth == true
+
       headers = authentication_header(auth).merge({ "Content-Type" => "application/json" })
       body = params ? params.to_json : ''
 
@@ -140,6 +151,22 @@ class Minisky
       else
         {}
       end
+    end
+
+    def token_expiration_date(token)
+      parts = token.split('.')
+      raise InvalidTokenError.new("Invalid JWT format") unless parts.length == 3
+
+      begin
+        payload = JSON.parse(Base64.decode64(parts[1]))
+      rescue JSON::ParserError
+        raise InvalidTokenError.new("Couldn't decode JWT payload")
+      end
+
+      exp = payload['exp']
+      raise InvalidTokenError.new("Invalid token expiry data") unless exp.is_a?(Numeric) && exp > 0
+
+      Time.at(exp)
     end
 
     def handle_response(response)

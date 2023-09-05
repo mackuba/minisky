@@ -4,6 +4,12 @@ class Minisky
   class Error < StandardError
   end
 
+  class InvalidTokenError < Error
+    def initialize(message)
+      super(message)
+    end
+  end
+
   class BadResponse < Error
     attr_reader :status, :data
 
