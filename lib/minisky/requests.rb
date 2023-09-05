@@ -120,6 +120,13 @@ class Minisky
       json
     end
 
+    def reset_tokens
+      config['access_token'] = nil
+      config['refresh_token'] = nil
+      save_config
+      nil
+    end
+
     private
 
     def authentication_header(auth)
