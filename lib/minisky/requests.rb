@@ -95,12 +95,8 @@ class Minisky
     def check_access
       if !user.logged_in?
         log_in
-      else
-        begin
-          get_request('com.atproto.server.getSession')
-        rescue OpenURI::HTTPError
-          perform_token_refresh
-        end
+      elsif token_expiration_date(user.access_token) < Time.now + 60
+        perform_token_refresh
       end
     end
 
