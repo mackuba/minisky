@@ -101,6 +101,10 @@ class Minisky
     end
 
     def log_in
+      if user.id.nil? || user.pass.nil?
+        raise AuthError, "To log in, please provide a user id and password"
+      end
+
       data = {
         identifier: user.id,
         password: user.pass
