@@ -43,10 +43,14 @@ bsky.check_access
 Now, you can make requests to the Bluesky API using `get_request` and `post_request`:
 
 ```rb
-bsky.get_request('com.atproto.repo.listRecords', {
+json = bsky.get_request('com.atproto.repo.listRecords', {
   repo: bsky.user.did,
   collection: 'app.bsky.feed.like'
 })
+
+json['records'].each do |r|
+  puts r['value']['subject']['uri']
+end
 
 bsky.post_request('com.atproto.repo.createRecord', {
   repo: bsky.user.did,
@@ -65,7 +69,7 @@ The third useful method you can use is `#fetch_all`, which loads multiple pagina
 ```rb
 time_limit = Time.now - 86400 * 30
 
-bsky.fetch_all('com.atproto.repo.listRecords',
+posts = bsky.fetch_all('com.atproto.repo.listRecords',
   { repo: bsky.user.did, collection: 'app.bsky.feed.post' },
   field: 'records',
   max_pages: 10,
@@ -75,7 +79,7 @@ bsky.fetch_all('com.atproto.repo.listRecords',
 There is also a `progress` option you can use to print some kind of character for every page load. E.g. pass `progress: '.'` to print dots as the pages are loading:
 
 ```rb
-bsky.fetch_all('com.atproto.repo.listRecords',
+likes = bsky.fetch_all('com.atproto.repo.listRecords',
   { repo: bsky.user.did, collection: 'app.bsky.feed.like' },
   field: 'records',
   progress: '.')
