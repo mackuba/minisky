@@ -22,10 +22,10 @@ class Minisky
 
   module Requests
     attr_accessor :default_progress
-    attr_writer :default_auth
+    attr_writer :send_auth_headers
 
-    def default_auth
-      instance_variable_defined?('@default_auth') ? @default_auth : true
+    def send_auth_headers
+      instance_variable_defined?('@send_auth_headers') ? @send_auth_headers : true
     end
 
     def base_url
@@ -36,7 +36,7 @@ class Minisky
       @user ||= User.new(config)
     end
 
-    def get_request(method, params = nil, auth: default_auth)
+    def get_request(method, params = nil, auth: default_auth_mode)
       headers = authentication_header(auth)
       url = URI("#{base_url}/#{method}")
 
@@ -48,7 +48,7 @@ class Minisky
       handle_response(response)
     end
 
-    def post_request(method, params = nil, auth: default_auth)
+    def post_request(method, params = nil, auth: default_auth_mode)
       headers = authentication_header(auth).merge({ "Content-Type" => "application/json" })
       body = params ? params.to_json : ''
 
@@ -57,7 +57,7 @@ class Minisky
     end
 
     def fetch_all(method, params = nil, field:,
-                  auth: default_auth, break_when: nil, max_pages: nil, progress: @default_progress)
+                  auth: default_auth_mode, break_when: nil, max_pages: nil, progress: @default_progress)
       data = []
       params = {} if params.nil?
       pages = 0
@@ -127,6 +127,10 @@ class Minisky
     end
 
     private
+
+    def default_auth_mode
+      !!send_auth_headers
+    end
 
     def authentication_header(auth)
       if auth.is_a?(String)

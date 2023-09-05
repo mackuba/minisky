@@ -33,9 +33,9 @@ shared_examples "Requests" do |host|
     end
 
     [true, false, nil, :undefined, 'wtf'].each do |v|
-      context "with default_auth set to #{v.inspect}" do
+      context "with send_auth_headers set to #{v.inspect}" do
         it 'should not set authentication header' do
-          subject.default_auth = v unless v == :undefined
+          subject.send_auth_headers = v unless v == :undefined
           subject.log_in
 
           WebMock.should have_requested(:post, "https://#{host}/xrpc/com.atproto.server.createSession")
@@ -82,9 +82,9 @@ shared_examples "Requests" do |host|
     end
 
     [true, false, nil, :undefined, 'wtf'].each do |v|
-      context "with default_auth set to #{v.inspect}" do
+      context "with send_auth_headers set to #{v.inspect}" do
         it 'should authenticate with the refresh token' do
-          subject.default_auth = v unless v == :undefined
+          subject.send_auth_headers = v unless v == :undefined
           subject.perform_token_refresh
 
           WebMock.should have_requested(:post, "https://#{host}/xrpc/com.atproto.server.refreshSession")
@@ -150,9 +150,9 @@ shared_examples "Requests" do |host|
     end
 
     [true, false, nil, :undefined, 'wtf'].each do |v|
-      context "with default_auth set to #{v.inspect}" do
+      context "with send_auth_headers set to #{v.inspect}" do
         before do
-          subject.default_auth = v unless v == :undefined
+          subject.send_auth_headers = v unless v == :undefined
         end
 
         context 'with an explicit auth token' do
@@ -196,31 +196,31 @@ shared_examples "Requests" do |host|
     end
 
     context 'without an auth parameter' do
-      it 'should use the access token if default_auth is true' do
-        subject.default_auth = true
+      it 'should use the access token if send_auth_headers is true' do
+        subject.send_auth_headers = true
         subject.get_request('com.example.service.getStuff')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
           .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should use the access token if default_auth is not set' do
+      it 'should use the access token if send_auth_headers is not set' do
         subject.get_request('com.example.service.getStuff')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
           .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should use an explicit token if default_auth is set to one' do
-        subject.default_auth = 'wtf'
+      it 'should use the access token if send_auth_headers is set to a truthy value' do
+        subject.send_auth_headers = 'wtf'
         subject.get_request('com.example.service.getStuff')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-          .with(headers: { 'Authorization' => 'Bearer wtf' })
+          .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should should not set the authorization header if default_auth is false' do
-        subject.default_auth = false
+      it 'should should not set the authorization header if send_auth_headers is false' do
+        subject.send_auth_headers = false
         subject.get_request('com.example.service.getStuff')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
@@ -228,8 +228,8 @@ shared_examples "Requests" do |host|
           .with(headers: { 'Authorization' => /.*/ })
       end
 
-      it 'should should not set the authorization header if default_auth is nil' do
-        subject.default_auth = nil
+      it 'should should not set the authorization header if send_auth_headers is nil' do
+        subject.send_auth_headers = nil
         subject.get_request('com.example.service.getStuff')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
@@ -266,9 +266,9 @@ shared_examples "Requests" do |host|
     end
 
     [true, false, nil, :undefined, 'wtf'].each do |v|
-      context "with default_auth set to #{v.inspect}" do
+      context "with send_auth_headers set to #{v.inspect}" do
         before do
-          subject.default_auth = v unless v == :undefined
+          subject.send_auth_headers = v unless v == :undefined
         end
 
         context 'with an explicit auth token' do
@@ -303,31 +303,31 @@ shared_examples "Requests" do |host|
     end
 
     context 'without an auth parameter' do
-      it 'should use the access token if default_auth is true' do
-        subject.default_auth = true
+      it 'should use the access token if send_auth_headers is true' do
+        subject.send_auth_headers = true
         subject.post_request('com.example.service.doStuff')
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
           .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should use the access token if default_auth is not set' do
+      it 'should use the access token if send_auth_headers is not set' do
         subject.post_request('com.example.service.doStuff')
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
           .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should use an explicit token if default_auth is set to one' do
-        subject.default_auth = 'wtf'
+      it 'should use the access token if send_auth_headers is set to a truthy value' do
+        subject.send_auth_headers = 'wtf'
         subject.post_request('com.example.service.doStuff')
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
-          .with(headers: { 'Authorization' => 'Bearer wtf' })
+          .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should not set the authorization header if default_auth is false' do
-        subject.default_auth = false
+      it 'should not set the authorization header if send_auth_headers is false' do
+        subject.send_auth_headers = false
         subject.post_request('com.example.service.doStuff')
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
@@ -335,8 +335,8 @@ shared_examples "Requests" do |host|
           .with(headers: { 'Authorization' => /.*/ })
       end
 
-      it 'should not set the authorization header if default_auth is nil' do
-        subject.default_auth = nil
+      it 'should not set the authorization header if send_auth_headers is nil' do
+        subject.send_auth_headers = nil
         subject.post_request('com.example.service.doStuff')
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
@@ -460,7 +460,7 @@ shared_examples "Requests" do |host|
     end
 
     [true, false, nil, :undefined, 'wtf'].each do |v|
-      context "with default_auth set to #{v.inspect}" do
+      context "with send_auth_headers set to #{v.inspect}" do
         before do
           stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
             .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc333" }')
@@ -468,7 +468,7 @@ shared_examples "Requests" do |host|
           stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333")
             .to_return(body: '{ "items": ["four", "five"] }')
 
-          subject.default_auth = v unless v == :undefined
+          subject.send_auth_headers = v unless v == :undefined
         end
 
         context 'with an explicit token' do
@@ -515,8 +515,8 @@ shared_examples "Requests" do |host|
           .to_return(body: '{ "items": ["four", "five"] }')
       end
 
-      it 'should use the access token if default_auth is true' do
-        subject.default_auth = true
+      it 'should use the access token if send_auth_headers is true' do
+        subject.send_auth_headers = true
         subject.fetch_all('com.example.service.fetchAll', field: 'items')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
@@ -525,7 +525,7 @@ shared_examples "Requests" do |host|
           .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should use the access token if default_auth is not set' do
+      it 'should use the access token if send_auth_headers is not set' do
         subject.fetch_all('com.example.service.fetchAll', field: 'items')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
@@ -534,18 +534,18 @@ shared_examples "Requests" do |host|
           .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should use an explicit token if default_auth is set to one' do
-        subject.default_auth = 'wtf'
+      it 'should use the access token if send_auth_headers is set to a truthy value' do
+        subject.send_auth_headers = 'wtf'
         subject.fetch_all('com.example.service.fetchAll', field: 'items')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-          .with(headers: { 'Authorization' => 'Bearer wtf' })
+          .with(headers: { 'Authorization' => 'Bearer aatoken' })
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-          .with(headers: { 'Authorization' => 'Bearer wtf' })
+          .with(headers: { 'Authorization' => 'Bearer aatoken' })
       end
 
-      it 'should not add an authentication header if default_auth is false' do
-        subject.default_auth = false
+      it 'should not add an authentication header if send_auth_headers is false' do
+        subject.send_auth_headers = false
         subject.fetch_all('com.example.service.fetchAll', field: 'items')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
@@ -554,8 +554,8 @@ shared_examples "Requests" do |host|
           .with(headers: { 'Authorization' => /.*/ })
       end
 
-      it 'should not add an authentication header if default_auth is nil' do
-        subject.default_auth = nil
+      it 'should not add an authentication header if send_auth_headers is nil' do
+        subject.send_auth_headers = nil
         subject.fetch_all('com.example.service.fetchAll', field: 'items')
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
