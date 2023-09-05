@@ -189,7 +189,7 @@ class Minisky
       when Net::HTTPSuccess
         JSON.parse(response.body)
       when Net::HTTPRedirection
-        raise UnexpectedRedirect.new(status, response['location'])
+        raise UnexpectedRedirect.new(status, message, response['location'])
       else
         data = (response.content_type == 'application/json') ? JSON.parse(response.body) : response.body
 

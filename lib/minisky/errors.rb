@@ -16,7 +16,14 @@ class Minisky
     def initialize(status, status_message, data)
       @status = status
       @data = data
-      super(error_message || status_message)
+
+      message = if error_message
+        "#{status} #{status_message}: #{error_message}"
+      else
+        "#{status} #{status_message}"
+      end
+
+      super(message)
     end
 
     def error_type
@@ -40,8 +47,8 @@ class Minisky
   class UnexpectedRedirect < BadResponse
     attr_reader :location
 
-    def initialize(status, location)
-      super(status, "Unexpected redirect: #{location}", nil)
+    def initialize(status, status_message, location)
+      super(status, status_message, { 'message' => "Unexpected redirect: #{location}" })
       @location = location
     end
   end
