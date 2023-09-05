@@ -1,3 +1,16 @@
+## Unreleased
+
+* authentication improvements & changes:
+  - Minisky now automatically manages access tokens, calling `check_access` manually is not necessary (set `auto_manage_tokens` to `false` to disable this)
+  - `check_access` now just checks token's expiry time instead of making a request to `getSession`
+  - added `send_auth_headers` option - set to `false` to not set auth header automatically, which is the default
+  - removed default config file name - explicit file name is now required
+  - Minisky can now be used in unauthenticated mode - pass `nil` as the config file name
+  - added `reset_tokens` helper method
+* refactored response handling - typed errors are now raised on non-success response status
+* `user` wrapper can also be used for writing fields to the config
+* improved error handling
+
 ## [0.2.0] - 2023-09-02
 
 * more consistent handling of parameters in the main methods:
