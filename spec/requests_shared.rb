@@ -1,6 +1,10 @@
 shared_examples "Requests" do |host|
   let(:host) { host }
 
+  before do
+    subject.auto_manage_tokens = false
+  end
+
   it 'should load config from a file' do
     subject.user.id.should == 'john.foo'
     subject.user.access_token.should == 'aatoken'
