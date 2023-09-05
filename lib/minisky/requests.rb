@@ -117,6 +117,10 @@ class Minisky
     end
 
     def perform_token_refresh
+      if user.refresh_token.nil?
+        raise AuthError, "Can't refresh access token - refresh token is missing"
+      end
+
       json = post_request('com.atproto.server.refreshSession', auth: user.refresh_token)
 
       config['access_token'] = json['accessJwt']
@@ -143,8 +147,11 @@ class Minisky
       if auth.is_a?(String)
         { 'Authorization' => "Bearer #{auth}" }
       elsif auth
-        raise MissingTokenError if user.access_token.nil?
-        { 'Authorization' => "Bearer #{user.access_token}" }
+        if user.access_token
+          { 'Authorization' => "Bearer #{user.access_token}" }
+        else
+          raise AuthError, "Can't send auth headers, access token is missing"
+        end
       else
         {}
       end
@@ -152,16 +159,16 @@ class Minisky
 
     def token_expiration_date(token)
       parts = token.split('.')
-      raise InvalidTokenError.new("Invalid JWT format") unless parts.length == 3
+      raise AuthError, "Invalid access token format" unless parts.length == 3
 
       begin
         payload = JSON.parse(Base64.decode64(parts[1]))
       rescue JSON::ParserError
-        raise InvalidTokenError.new("Couldn't decode JWT payload")
+        raise AuthError, "Couldn't decode payload from access token"
       end
 
       exp = payload['exp']
-      raise InvalidTokenError.new("Invalid token expiry data") unless exp.is_a?(Numeric) && exp > 0
+      raise AuthError, "Invalid token expiry data" unless exp.is_a?(Numeric) && exp > 0
 
       Time.at(exp)
     end
