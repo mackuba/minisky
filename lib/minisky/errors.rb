@@ -4,6 +4,12 @@ class Minisky
   class Error < StandardError
   end
 
+  class MissingTokenError < Error
+    def initialize
+      super("Can't send auth headers, access token is missing")
+    end
+  end
+
   class InvalidTokenError < Error
     def initialize(message)
       super(message)

@@ -143,6 +143,7 @@ class Minisky
       if auth.is_a?(String)
         { 'Authorization' => "Bearer #{auth}" }
       elsif auth
+        raise MissingTokenError if user.access_token.nil?
         { 'Authorization' => "Bearer #{user.access_token}" }
       else
         {}
