@@ -17,8 +17,12 @@ class Minisky
       !!(access_token && refresh_token)
     end
 
-    def method_missing(name)
-      @config[name.to_s]
+    def method_missing(name, *args)
+      if name.end_with?('=')
+        @config[name.to_s.chop] = args[0]
+      else
+        @config[name.to_s]
+      end
     end
   end
 
@@ -112,9 +116,9 @@ class Minisky
 
       json = post_request('com.atproto.server.createSession', data, auth: false)
 
-      config['did'] = json['did']
-      config['access_token'] = json['accessJwt']
-      config['refresh_token'] = json['refreshJwt']
+      user.did = json['did']
+      user.access_token = json['accessJwt']
+      user.refresh_token = json['refreshJwt']
 
       save_config
       json
@@ -127,16 +131,16 @@ class Minisky
 
       json = post_request('com.atproto.server.refreshSession', auth: user.refresh_token)
 
-      config['access_token'] = json['accessJwt']
-      config['refresh_token'] = json['refreshJwt']
+      user.access_token = json['accessJwt']
+      user.refresh_token = json['refreshJwt']
 
       save_config
       json
     end
 
     def reset_tokens
-      config['access_token'] = nil
-      config['refresh_token'] = nil
+      user.access_token = nil
+      user.refresh_token = nil
       save_config
       nil
     end
