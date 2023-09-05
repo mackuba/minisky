@@ -377,7 +377,7 @@ shared_examples "Requests" do |host|
       let(:response) {{ body: '{ "error": "message" }', status: 403 }}
 
       it 'should raise an error' do
-        expect { subject.post_request('com.example.service.doStuff') }.to raise_error(RuntimeError)
+        expect { subject.post_request('com.example.service.doStuff') }.to raise_error(Minisky::ClientErrorResponse)
       end
     end
   end

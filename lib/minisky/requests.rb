@@ -1,8 +1,8 @@
 require_relative 'minisky'
+require_relative 'errors'
 
 require 'json'
 require 'net/http'
-require 'open-uri'
 require 'uri'
 
 class Minisky
@@ -44,7 +44,8 @@ class Minisky
         url.query = URI.encode_www_form(params)
       end
 
-      JSON.parse(URI.open(url, headers).read)
+      response = Net::HTTP.get_response(url, headers)
+      handle_response(response)
     end
 
     def post_request(method, params = nil, auth: default_auth)
@@ -52,9 +53,7 @@ class Minisky
       body = params ? params.to_json : ''
 
       response = Net::HTTP.post(URI("#{base_url}/#{method}"), body, headers)
-      raise "Invalid response: #{response.code} #{response.body}" if response.code.to_i / 100 != 2
-
-      JSON.parse(response.body)
+      handle_response(response)
     end
 
     def fetch_all(method, params = nil, field:,
@@ -136,6 +135,32 @@ class Minisky
         { 'Authorization' => "Bearer #{user.access_token}" }
       else
         {}
+      end
+    end
+
+    def handle_response(response)
+      status = response.code.to_i
+      message = response.message
+
+      case response
+      when Net::HTTPSuccess
+        JSON.parse(response.body)
+      when Net::HTTPRedirection
+        raise UnexpectedRedirect.new(status, response['location'])
+      else
+        data = (response.content_type == 'application/json') ? JSON.parse(response.body) : response.body
+
+        error_class = if data.is_a?(Hash) && data['error'] == 'ExpiredToken'
+          ExpiredTokenError
+        elsif response.is_a?(Net::HTTPClientError)
+          ClientErrorResponse
+        elsif response.is_a?(Net::HTTPServerError)
+          ServerErrorResponse
+        else
+          BadResponse
+        end
+
+        raise error_class.new(status, message, data)
       end
     end
   end
