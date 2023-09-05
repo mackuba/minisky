@@ -18,7 +18,7 @@ Or alternatively, add it to the `Gemfile` file for Bundler:
 
 ## Usage
 
-First, you need to create a `.yml` config file (by default, `bluesky.yml`) with the authentication data. It should look like this:
+First, you need to create a `.yml` config file with the authentication data, e.g. `bluesky.yml`. It should look like this:
 
 ```yaml
 id: my.bsky.username
@@ -29,12 +29,12 @@ The `id` can be either your handle, or your DID, or the email you've used to sig
 
 After you log in, this file will also be used to store your access & request tokens and DID. The data in the config file can be accessed through a `user` wrapper property that exposes them as methods, e.g. the password is available as `user.pass` and the DID as `user.did`.
 
-Next, create the Minisky client instance, passing the server name (at the moment there is only one server at `bsky.social`, but there will be more once federation support goes live):
+Next, create the Minisky client instance, passing the server name and the config file name (at the moment there is only one server at `bsky.social`, but there will be more once federation support goes live):
 
 ```rb
 require 'minisky'
 
-bsky = Minisky.new('bsky.social')
+bsky = Minisky.new('bsky.social', 'bluesky.yml')
 bsky.check_access
 ```
 
@@ -93,13 +93,7 @@ The `Minisky` client currently supports one configuration option:
 
 - `default_progress` - a progress character to automatically use for `#fetch_all` calls (default: `nil`)
 
-When creating the `Minisky` instance, you can pass a name of the YAML config file to use instead of the default:
-
-```rb
-bsky = Minisky.new('bsky.social', 'config/access.yml')
-```
-
-Alternatively, instead of using the `Minisky` class, you can make your own class that includes the `Minisky::Requests` module and provides a different way to load & save the config, e.g. from a JSON file:
+Instead of using the `Minisky` class, you can also make your own class that includes the `Minisky::Requests` module and provides a different way to load & save the config, e.g. from a JSON file:
 
 ```rb
 class BlueskyClient
