@@ -57,7 +57,8 @@ bsky.post_request('com.atproto.repo.createRecord', {
   collection: 'app.bsky.feed.post',
   record: {
     text: "Hello world!",
-    createdAt: Time.now.iso8601
+    createdAt: Time.now.iso8601,
+    langs: ["en"]
   }
 })
 ```
