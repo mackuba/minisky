@@ -1,3 +1,5 @@
+require_relative 'authorization'
+
 shared_examples "get_request" do
   describe '#get_request' do
     before do
@@ -43,93 +45,6 @@ shared_examples "get_request" do
       end
     end
 
-    [true, false, nil, :undefined, 'wtf'].each do |v|
-      context "with send_auth_headers set to #{v.inspect}" do
-        before do
-          subject.send_auth_headers = v unless v == :undefined
-        end
-
-        context 'with an explicit auth token' do
-          it 'should pass the token in the header' do
-            subject.get_request('com.example.service.getStuff', auth: 'token777')
-
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-              .with(headers: { 'Authorization' => 'Bearer token777' })
-          end
-        end
-
-        context 'with auth = true' do
-          it 'should use the access token' do
-            subject.get_request('com.example.service.getStuff', auth: true)
-
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-              .with(headers: { 'Authorization' => 'Bearer aatoken' })
-          end
-        end
-
-        context 'with auth = false' do
-          it 'should not set the authorization header' do
-            subject.get_request('com.example.service.getStuff', auth: false)
-
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-            WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff")
-              .with(headers: { 'Authorization' => /.*/ })
-          end
-        end
-
-        context 'with auth = nil' do
-          it 'should not set the authorization header' do
-            subject.get_request('com.example.service.getStuff', auth: nil)
-
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-            WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff")
-              .with(headers: { 'Authorization' => /.*/ })
-          end
-        end
-      end
-    end
-
-    context 'without an auth parameter' do
-      it 'should use the access token if send_auth_headers is true' do
-        subject.send_auth_headers = true
-        subject.get_request('com.example.service.getStuff')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-      end
-
-      it 'should use the access token if send_auth_headers is not set' do
-        subject.get_request('com.example.service.getStuff')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-      end
-
-      it 'should use the access token if send_auth_headers is set to a truthy value' do
-        subject.send_auth_headers = 'wtf'
-        subject.get_request('com.example.service.getStuff')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-      end
-
-      it 'should should not set the authorization header if send_auth_headers is false' do
-        subject.send_auth_headers = false
-        subject.get_request('com.example.service.getStuff')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-        WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff")
-          .with(headers: { 'Authorization' => /.*/ })
-      end
-
-      it 'should should not set the authorization header if send_auth_headers is nil' do
-        subject.send_auth_headers = nil
-        subject.get_request('com.example.service.getStuff')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
-        WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff")
-          .with(headers: { 'Authorization' => /.*/ })
-      end
-    end
+    include_examples "authorization", :get, 'com.example.service.getStuff'
   end
 end
