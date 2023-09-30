@@ -63,6 +63,8 @@ shared_examples "post_request" do
       end
     end
 
-    include_examples "authorization", :post, 'com.example.service.doStuff'
+    include_examples "authorization",
+      request: ->(subject, params) { subject.post_request('com.example.service.doStuff', **params) },
+      expected: ->(host) { [:post, "https://#{host}/xrpc/com.example.service.doStuff"] }
   end
 end

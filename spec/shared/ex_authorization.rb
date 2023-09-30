@@ -1,6 +1,19 @@
-shared_examples 'authorization' do |http_method, endpoint_name|
-  let(:method_name) { "#{http_method}_request" }
-  let(:url) { "https://#{host}/xrpc/#{endpoint_name}" }
+shared_examples 'authorization' do |http_method, request:, expected:|
+  let(:request) { request }
+  let(:expected) { expected }
+
+  def make_request(auth:)
+    request.call(subject, { auth: auth })
+  end
+
+  def make_request_without_auth
+    request.call(subject, {})
+  end
+
+  def expected_calls
+    calls = expected.call(host)
+    calls[0].is_a?(Array) ? calls : [calls]
+  end
 
   [true, false, nil, :undefined, 'wtf'].each do |v|
     context "with send_auth_headers set to #{v.inspect}" do
@@ -10,39 +23,43 @@ shared_examples 'authorization' do |http_method, endpoint_name|
 
       context 'with an explicit auth token' do
         it 'should pass the token in the header' do
-          subject.send(method_name, endpoint_name, auth: 'qwerty99')
+          make_request(auth: 'qwerty99')
 
-          WebMock.should have_requested(http_method, url).once
-            .with(headers: { 'Authorization' => 'Bearer qwerty99' })
+          expected_calls.each do |method, url|
+            WebMock.should have_requested(method, url).once.with(headers: { 'Authorization' => 'Bearer qwerty99' })
+          end
         end
       end
 
       context 'with auth = true' do
         it 'should use the access token' do
-          subject.send(method_name, endpoint_name, auth: true)
+          make_request(auth: true)
 
-          WebMock.should have_requested(http_method, url).once
-            .with(headers: { 'Authorization' => 'Bearer aatoken' })
+          expected_calls.each do |method, url|
+            WebMock.should have_requested(method, url).once.with(headers: { 'Authorization' => 'Bearer aatoken' })
+          end
         end
       end
 
       context 'with auth = false' do
         it 'should not set the authorization header' do
-          subject.send(method_name, endpoint_name, auth: false)
+          make_request(auth: false)
 
-          WebMock.should have_requested(http_method, url).once
-          WebMock.should_not have_requested(http_method, url)
-            .with(headers: { 'Authorization' => /.*/ })
+          expected_calls.each do |method, url|
+            WebMock.should have_requested(method, url).once
+            WebMock.should_not have_requested(method, url).with(headers: { 'Authorization' => /.*/ })
+          end
         end
       end
 
       context 'with auth = nil' do
         it 'should not set the authorization header' do
-          subject.send(method_name, endpoint_name, auth: nil)
+          make_request(auth: nil)
 
-          WebMock.should have_requested(http_method, url).once
-          WebMock.should_not have_requested(http_method, url)
-            .with(headers: { 'Authorization' => /.*/ })
+          expected_calls.each do |method, url|
+            WebMock.should have_requested(method, url).once
+            WebMock.should_not have_requested(method, url).with(headers: { 'Authorization' => /.*/ })
+          end
         end
       end
     end
@@ -51,43 +68,52 @@ shared_examples 'authorization' do |http_method, endpoint_name|
   context 'without an auth parameter' do
     it 'should use the access token if send_auth_headers is true' do
       subject.send_auth_headers = true
-      subject.send(method_name, endpoint_name)
 
-      WebMock.should have_requested(http_method, url).once
-        .with(headers: { 'Authorization' => 'Bearer aatoken' })
+      make_request_without_auth
+
+      expected_calls.each do |method, url|
+        WebMock.should have_requested(method, url).once.with(headers: { 'Authorization' => 'Bearer aatoken' })
+      end
     end
 
     it 'should use the access token if send_auth_headers is not set' do
-      subject.send(method_name, endpoint_name)
+      make_request_without_auth
 
-      WebMock.should have_requested(http_method, url).once
-        .with(headers: { 'Authorization' => 'Bearer aatoken' })
+      expected_calls.each do |method, url|
+        WebMock.should have_requested(method, url).once.with(headers: { 'Authorization' => 'Bearer aatoken' })
+      end
     end
 
     it 'should use the access token if send_auth_headers is set to a truthy value' do
       subject.send_auth_headers = 'wtf'
-      subject.send(method_name, endpoint_name)
 
-      WebMock.should have_requested(http_method, url).once
-        .with(headers: { 'Authorization' => 'Bearer aatoken' })
+      make_request_without_auth
+
+      expected_calls.each do |method, url|
+        WebMock.should have_requested(method, url).once.with(headers: { 'Authorization' => 'Bearer aatoken' })
+      end
     end
 
     it 'should not set the authorization header if send_auth_headers is false' do
       subject.send_auth_headers = false
-      subject.send(method_name, endpoint_name)
 
-      WebMock.should have_requested(http_method, url).once
-      WebMock.should_not have_requested(http_method, url)
-        .with(headers: { 'Authorization' => /.*/ })
+      make_request_without_auth
+
+      expected_calls.each do |method, url|
+        WebMock.should have_requested(method, url).once
+        WebMock.should_not have_requested(method, url).with(headers: { 'Authorization' => /.*/ })
+      end
     end
 
     it 'should not set the authorization header if send_auth_headers is nil' do
       subject.send_auth_headers = nil
-      subject.send(method_name, endpoint_name)
 
-      WebMock.should have_requested(http_method, url).once
-      WebMock.should_not have_requested(http_method, url)
-        .with(headers: { 'Authorization' => /.*/ })
+      make_request_without_auth
+
+      expected_calls.each do |method, url|
+        WebMock.should have_requested(method, url).once
+        WebMock.should_not have_requested(method, url).with(headers: { 'Authorization' => /.*/ })
+      end
     end
   end
 end
