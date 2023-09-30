@@ -111,6 +111,26 @@ shared_examples "Requests" do |host|
     it 'should return the response json' do
       subject.perform_token_refresh.should == JSON.parse(response_json)
     end
+
+    context 'if refresh_token is nil' do
+      before do
+        subject.user.refresh_token = nil
+      end
+
+      it 'should raise AuthError' do
+        expect { subject.perform_token_refresh }.to raise_error(Minisky::AuthError)
+      end
+    end
+
+    context 'if refresh_token is not provided' do
+      before do
+        subject.config.delete('refresh_token')
+      end
+
+      it 'should raise AuthError' do
+        expect { subject.perform_token_refresh }.to raise_error(Minisky::AuthError)
+      end
+    end
   end
 
   include_examples "get_request"
