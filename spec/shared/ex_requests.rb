@@ -1,6 +1,6 @@
-require_relative 'get_request'
-require_relative 'post_request'
-require_relative 'fetch_all'
+require_relative 'ex_get_request'
+require_relative 'ex_post_request'
+require_relative 'ex_fetch_all'
 
 shared_examples "Requests" do |host|
   let(:host) { host }

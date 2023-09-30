@@ -4,7 +4,7 @@ require 'pp' # needs to be included before fakefs
 require 'fakefs/spec_helpers'
 require 'webmock/rspec'
 
-require_relative 'shared/requests'
+require_relative 'shared/ex_requests'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

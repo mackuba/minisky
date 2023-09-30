@@ -1,4 +1,4 @@
-require_relative 'authorization'
+require_relative 'ex_authorization'
 
 shared_examples "get_request" do
   describe '#get_request' do
