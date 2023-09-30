@@ -76,54 +76,7 @@ shared_examples "fetch_all" do
       end
     end
 
-    [true, false, nil, :undefined, 'wtf'].each do |v|
-      context "with send_auth_headers set to #{v.inspect}" do
-        before do
-          stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-            .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc333" }')
-
-          stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333")
-            .to_return(body: '{ "items": ["four", "five"] }')
-
-          subject.send_auth_headers = v unless v == :undefined
-        end
-
-        context 'with an explicit token' do
-          it 'should pass the token in the header' do
-            subject.fetch_all('com.example.service.fetchAll', auth: 'XXXX', field: 'items')
-
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-              .with(headers: { 'Authorization' => 'Bearer XXXX' })
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-              .with(headers: { 'Authorization' => 'Bearer XXXX' })
-          end
-        end
-
-        context 'with auth = false' do
-          it 'should not add an authentication header' do
-            subject.fetch_all('com.example.service.fetchAll', field: 'items', auth: false)
-
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-            WebMock.should_not have_requested(:get, %r(https://#{host}/xrpc/com.example.service.fetchAll))
-              .with(headers: { 'Authorization' => /.*/ })
-          end
-        end
-
-        context 'with auth = nil' do
-          it 'should not add an authentication header' do
-            subject.fetch_all('com.example.service.fetchAll', field: 'items', auth: nil)
-
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-            WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-            WebMock.should_not have_requested(:get, %r(https://#{host}/xrpc/com.example.service.fetchAll))
-              .with(headers: { 'Authorization' => /.*/ })
-          end
-        end
-      end
-    end
-
-    context "without an auth parameter" do
+    describe "authorization" do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
           .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc333" }')
@@ -132,54 +85,14 @@ shared_examples "fetch_all" do
           .to_return(body: '{ "items": ["four", "five"] }')
       end
 
-      it 'should use the access token if send_auth_headers is true' do
-        subject.send_auth_headers = true
-        subject.fetch_all('com.example.service.fetchAll', field: 'items')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-      end
-
-      it 'should use the access token if send_auth_headers is not set' do
-        subject.fetch_all('com.example.service.fetchAll', field: 'items')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-      end
-
-      it 'should use the access token if send_auth_headers is set to a truthy value' do
-        subject.send_auth_headers = 'wtf'
-        subject.fetch_all('com.example.service.fetchAll', field: 'items')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-          .with(headers: { 'Authorization' => 'Bearer aatoken' })
-      end
-
-      it 'should not add an authentication header if send_auth_headers is false' do
-        subject.send_auth_headers = false
-        subject.fetch_all('com.example.service.fetchAll', field: 'items')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-        WebMock.should_not have_requested(:get, %r(https://#{host}/xrpc/com.example.service.fetchAll))
-          .with(headers: { 'Authorization' => /.*/ })
-      end
-
-      it 'should not add an authentication header if send_auth_headers is nil' do
-        subject.send_auth_headers = nil
-        subject.fetch_all('com.example.service.fetchAll', field: 'items')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333").once
-        WebMock.should_not have_requested(:get, %r(https://#{host}/xrpc/com.example.service.fetchAll))
-          .with(headers: { 'Authorization' => /.*/ })
-      end
+      include_examples "authorization",
+        request: ->(subject, params) {
+          subject.fetch_all('com.example.service.fetchAll', field: 'items', **params)
+        },
+        expected: ->(host) {[
+          [:get, "https://#{host}/xrpc/com.example.service.fetchAll"],
+          [:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333"]
+        ]}
     end
 
     context 'when break condition is passed' do
