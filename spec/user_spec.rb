@@ -13,6 +13,11 @@ describe Minisky::User do
     subject.email.should == 'admin@bsky.app'
   end
 
+  it 'should pass setters to the config hash' do
+    subject.age = 33
+    config['age'].should == 33
+  end
+
   context '#logged_in?' do
     it 'should return false if access token is missing' do
       subject.logged_in?.should be false

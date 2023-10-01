@@ -133,6 +133,24 @@ shared_examples "Requests" do |host|
     end
   end
 
+  describe '#reset_tokens' do
+    it 'should set tokens to nil' do
+      subject.reset_tokens
+
+      subject.user.access_token.should be_nil
+      subject.user.refresh_token.should be_nil
+    end
+
+    it 'should save the config to disk' do
+      subject.reset_tokens
+
+      config = reloaded_config
+
+      config['access_token'].should be_nil
+      config['refresh_token'].should be_nil
+    end
+  end
+
   include_examples "get_request"
   include_examples "post_request"
   include_examples "fetch_all"
