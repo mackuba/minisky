@@ -1,4 +1,5 @@
 require 'json'
+require_relative 'shared/ex_unauthed'
 
 class CustomJSONClient
   CONFIG_FILE = 'test.json'
@@ -42,45 +43,35 @@ describe "in custom client" do
     include_examples "Requests", 'at.x.com'
   end
 
-  context '#log_in' do
-    context 'if id field is nil' do
-      before do
-        File.write('test.json', JSON.generate(data.merge('id' => nil)))
-      end
-
-      it 'should raise AuthError' do
-        expect { subject.log_in }.to raise_error(Minisky::AuthError)
-      end
+  context 'if id field is nil,' do
+    before do
+      File.write('test.json', JSON.generate(data.merge('id' => nil)))
     end
 
-    context 'if id field is not included' do
-      before do
-        File.write('test.json', JSON.generate(data.slice('pass', 'access_token', 'refresh_token')))
-      end
+    include_examples "unauthenticated user"
+  end
 
-      it 'should raise AuthError' do
-        expect { subject.log_in }.to raise_error(Minisky::AuthError)
-      end
+  context 'if id field is not included' do
+    before do
+      File.write('test.json', JSON.generate(data.slice('pass', 'access_token', 'refresh_token')))
     end
 
-    context 'if pass field is nil' do
-      before do
-        File.write('test.json', JSON.generate(data.merge('pass' => nil)))
-      end
+    include_examples "unauthenticated user"
+  end
 
-      it 'should raise AuthError' do
-        expect { subject.log_in }.to raise_error(Minisky::AuthError)
-      end
+  context 'if pass field is nil' do
+    before do
+      File.write('test.json', JSON.generate(data.merge('pass' => nil)))
     end
 
-    context 'if pass field is not included' do
-      before do
-        File.write('test.json', JSON.generate(data.slice('id', 'access_token', 'refresh_token')))
-      end
+    include_examples "unauthenticated user"
+  end
 
-      it 'should raise AuthError' do
-        expect { subject.log_in }.to raise_error(Minisky::AuthError)
-      end
+  context 'if pass field is not included' do
+    before do
+      File.write('test.json', JSON.generate(data.slice('id', 'access_token', 'refresh_token')))
     end
+
+    include_examples "unauthenticated user"
   end
 end

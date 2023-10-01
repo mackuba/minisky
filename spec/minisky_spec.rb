@@ -1,4 +1,5 @@
 require 'yaml'
+require_relative 'shared/ex_unauthed'
 
 describe 'in Minisky instance' do
   include FakeFS::SpecHelpers
@@ -26,6 +27,12 @@ describe 'in Minisky instance' do
     end
 
     include_examples "Requests", 'bsky.test'
+  end
+
+  context 'without a config' do
+    subject { Minisky.new(host, nil) }
+
+    include_examples "unauthenticated user"
   end
 
   context 'if id field is nil' do
