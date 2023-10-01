@@ -1,6 +1,6 @@
 require 'yaml'
 
-describe Minisky do
+describe 'in Minisky instance' do
   include FakeFS::SpecHelpers
 
   let(:host) { 'bsky.test' }
@@ -20,7 +20,7 @@ describe Minisky do
     Minisky::VERSION.should_not be_nil
   end
 
-  context 'with correct config' do
+  context 'with correct config,' do
     before do
       File.write('myconfig.yml', YAML.dump(data))
     end

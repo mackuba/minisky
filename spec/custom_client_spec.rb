@@ -20,7 +20,7 @@ class CustomJSONClient
   end
 end
 
-describe "custom client" do
+describe "in custom client" do
   include FakeFS::SpecHelpers
 
   let(:data) {{
@@ -34,7 +34,7 @@ describe "custom client" do
 
   let(:reloaded_config) { JSON.parse(File.read('test.json')) }
 
-  context 'with correct config' do
+  context 'with correct config,' do
     before do
       File.write('test.json', JSON.generate(data))
     end

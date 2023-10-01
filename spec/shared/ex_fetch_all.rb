@@ -76,7 +76,7 @@ shared_examples "fetch_all" do
       end
     end
 
-    describe "authorization" do
+    describe '…' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
           .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc333" }')
