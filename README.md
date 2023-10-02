@@ -92,6 +92,9 @@ This will output a line like this:
 .................
 ```
 
+You can find more examples in the [example](https://github.com/mackuba/minisky/tree/master/example) directory.
+
+
 ## Customization
 
 The `Minisky` client currently supports one configuration option:
