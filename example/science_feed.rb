@@ -39,7 +39,11 @@ end
 puts
 
 entries.each do |post, author|
-  puts "@#{author['handle']} • #{Time.parse(post['value']['createdAt']).getlocal}"
+  handle = author['handle']
+  timestamp = Time.parse(post['value']['createdAt']).getlocal
+  link = "https://bsky.app/profile/#{handle}/post/#{post['uri'].split('/').last}"
+
+  puts "@#{handle} • #{timestamp} • #{link}"
   puts
   puts post['value']['text']
   puts
