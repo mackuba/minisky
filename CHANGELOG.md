@@ -1,4 +1,4 @@
-## Unreleased
+## [0.3.0] - 2023-10-05
 
 * authentication improvements & changes:
   - Minisky now automatically manages access tokens, calling `check_access` manually is not necessary (set `auto_manage_tokens` to `false` to disable this)

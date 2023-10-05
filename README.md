@@ -13,7 +13,7 @@ To install the Minisky gem, run the command:
 
 Or alternatively, add it to the `Gemfile` file for Bundler:
 
-    gem 'minisky', '~> 0.2'
+    gem 'minisky', '~> 0.3'
 
 
 ## Usage
