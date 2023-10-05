@@ -18,6 +18,32 @@ Or alternatively, add it to the `Gemfile` file for Bundler:
 
 ## Usage
 
+All calls to the XRPC API are made through an instance of the `Minisky` class. There are two ways to use the library: with or without authentication.
+
+
+### Unauthenticated access
+
+You can access parts of the API anonymously without any authentication. This currently includes: read-only `com.atproto.*` routes on the PDS (user's data server) and most read-only `app.bsky.*` routes on the AppView server.
+
+This allows you to do things like:
+
+- look up specific records or lists of all records of a given type in any account (in their raw form)
+- look up profile information about any account
+- load complete threads or users' profile feeds from the AppView
+
+To use Minisky this way, create a `Minisky` instance passing the API hostname string (at the moment there is only one server at `bsky.social`, but there will be more once federation support goes live) and `nil` as the configuration in the arguments:
+
+```rb
+require 'minisky'
+
+bsky = Minisky.new('bsky.social', nil)
+```
+
+
+### Authenticated access
+
+To use the complete API including posting or reading your home feed, you need to log in using your account info and get an access token which will be added as an authentication header to all requests.
+
 First, you need to create a `.yml` config file with the authentication data, e.g. `bluesky.yml`. It should look like this:
 
 ```yaml
@@ -29,18 +55,20 @@ The `id` can be either your handle, or your DID, or the email you've used to sig
 
 After you log in, this file will also be used to store your access & request tokens and DID. The data in the config file can be accessed through a `user` wrapper property that exposes them as methods, e.g. the password is available as `user.pass` and the DID as `user.did`.
 
-Next, create the Minisky client instance, passing the server name and the config file name (at the moment there is only one server at `bsky.social`, but there will be more once federation support goes live):
+Next, create the Minisky client instance, passing the server name and the config file name:
 
 ```rb
 require 'minisky'
 
 bsky = Minisky.new('bsky.social', 'bluesky.yml')
-bsky.check_access
 ```
 
-`check_access` will check if an access token is saved, if not - it will log you in using the login & password, otherwise it will check if the token is still valid and refresh it if needed.
+Minisky automatically manages your access and refresh tokens - it will first log you in using the login & password, and then use the refresh token to update the access token before the request when it expires.
 
-Now, you can make requests to the Bluesky API using `get_request` and `post_request`:
+
+### Making requests
+
+With a `Minisky` client instance, you can make requests to the Bluesky API using `get_request` and `post_request`:
 
 ```rb
 json = bsky.get_request('com.atproto.repo.listRecords', {
@@ -63,7 +91,7 @@ bsky.post_request('com.atproto.repo.createRecord', {
 })
 ```
 
-The requests use the saved access token for authentication automatically. You can also pass `auth: false` or `auth: nil` to not send any authentication headers, or `auth: sometoken` to use a specific other token.
+In authenticated mode, the requests use the saved access token for auth headers automatically. You can also pass `auth: false` or `auth: nil` to not send any authentication headers for a given request, or `auth: sometoken` to use a specific other token. In unauthenticated mode, sending of auth headers is disabled.
 
 The third useful method you can use is `#fetch_all`, which loads multiple paginated responses and collects all returned items on a single list (you need to pass the name of the field that contains the items in the response). Optionally, you can also specify a limit of pages to load as `max_pages: n`, or a break condition `break_when` to stop fetching when any item matches it. You can use it to e.g. to fetch all of your posts from the last 30 days, but not earlier:
 
@@ -97,9 +125,18 @@ You can find more examples in the [example](https://github.com/mackuba/minisky/t
 
 ## Customization
 
-The `Minisky` client currently supports one configuration option:
+The `Minisky` client currently supports such configuration options:
 
 - `default_progress` - a progress character to automatically use for `#fetch_all` calls (default: `nil`)
+- `send_auth_headers` - whether auth headers should be added by default (default: `true` in authenticated mode)
+- `auto_manage_tokens` - whether access tokens should be generated and refreshed automatically when needed (default: `true` in authenticated mode)
+
+In authenticated mode, you can disable the `send_auth_headers` option and then explicitly add `auth: true` to specific requests to include a header there.
+
+You can also disable the `auto_manage_tokens` option - in this case you will need to call the `#check_access` method before a request to refresh a token if needed, or alternatively, call either `#login` or `#perform_token_refresh`.
+
+
+### Using your own class
 
 Instead of using the `Minisky` class, you can also make your own class that includes the `Minisky::Requests` module and provides a different way to load & save the config, e.g. from a JSON file:
 
@@ -128,7 +165,6 @@ It can then be used just like the `Minisky` class:
 
 ```rb
 bsky = BlueskyClient.new('config/access.json')
-bsky.check_access
 bsky.get_request(...)
 ```
 
