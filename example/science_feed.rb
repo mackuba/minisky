@@ -4,6 +4,7 @@
 # terminal. Does not require any authentication.
 #
 # It's definitely not the most efficient way to do this, but it demonstrates how to load single records from the API.
+# (A more efficient way would be e.g. to connect to the AppView at api.bsky.app and make one call to getPosts.)
 
 # load minisky from a local folder - you normally won't need this
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
