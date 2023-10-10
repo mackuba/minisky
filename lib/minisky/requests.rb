@@ -147,6 +147,21 @@ class Minisky
       nil
     end
 
+    if RUBY_VERSION.to_i == 2
+      alias_method :do_get_request, :get_request
+      alias_method :do_post_request, :post_request
+      private :do_get_request, :do_post_request
+
+      def get_request(method, params = nil, auth: default_auth_mode, **kwargs)
+        do_get_request(method, params || kwargs, auth: auth)
+      end
+
+      def post_request(method, params = nil, auth: default_auth_mode, **kwargs)
+        do_post_request(method, params || kwargs, auth: auth)
+      end
+    end
+
+
     private
 
     def make_request(request)
