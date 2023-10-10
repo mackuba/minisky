@@ -1,3 +1,7 @@
+## [0.3.1] - 2023-10-10
+
+* fixed Minisky not working on Ruby 2.x
+
 ## [0.3.0] - 2023-10-05
 
 * authentication improvements & changes:
