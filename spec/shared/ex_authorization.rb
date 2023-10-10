@@ -1,4 +1,4 @@
-shared_examples 'authorization' do |http_method, request:, expected:|
+shared_examples 'authorization' do |request:, expected:|
   let(:request) { request }
   let(:expected) { expected }
 
