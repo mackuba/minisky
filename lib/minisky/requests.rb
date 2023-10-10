@@ -153,11 +153,13 @@ class Minisky
       private :do_get_request, :do_post_request
 
       def get_request(method, params = nil, auth: default_auth_mode, **kwargs)
-        do_get_request(method, params || kwargs, auth: auth)
+        params ||= kwargs unless kwargs.empty?
+        do_get_request(method, params, auth: auth)
       end
 
       def post_request(method, params = nil, auth: default_auth_mode, **kwargs)
-        do_post_request(method, params || kwargs, auth: auth)
+        params ||= kwargs unless kwargs.empty?
+        do_post_request(method, params, auth: auth)
       end
     end
 
