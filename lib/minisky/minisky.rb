@@ -3,7 +3,7 @@ require 'yaml'
 class Minisky
   attr_reader :host, :config
 
-  def initialize(host, config_file)
+  def initialize(host, config_file, options = {})
     @host = host
     @config_file = config_file
 
@@ -17,6 +17,12 @@ class Minisky
       @config = {}
       @send_auth_headers = false
       @auto_manage_tokens = false
+    end
+
+    if options
+      options.each do |k, v|
+        self.send("#{k}=", v)
+      end
     end
   end
 
