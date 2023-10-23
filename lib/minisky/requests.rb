@@ -39,6 +39,8 @@ class Minisky
       instance_variable_defined?('@auto_manage_tokens') ? @auto_manage_tokens : true
     end
 
+    alias progress= default_progress=
+
     def base_url
       @base_url ||= "https://#{host}/xrpc"
     end
