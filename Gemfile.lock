@@ -6,7 +6,6 @@ PATH
       json (~> 2.5)
       net-http (~> 0.2)
       time (~> 0.3)
-      uri (~> 0.13)
       yaml (~> 0.1)
 
 GEM
