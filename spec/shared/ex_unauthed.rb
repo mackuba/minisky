@@ -21,7 +21,7 @@ shared_examples "unauthenticated user" do
 
     describe '#get_request' do
       it 'should not raise errors' do
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.getTrends").to_return(body: '{ "result": 123 }')
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.getTrends").to_return_json(body: { result: 123 })
 
         expect { subject.get_request('com.example.service.getTrends') }.to_not raise_error
 
@@ -31,7 +31,7 @@ shared_examples "unauthenticated user" do
 
     describe '#post_request' do
       it 'should not raise errors' do
-        stub_request(:post, "https://#{host}/xrpc/com.example.service.createApp").to_return(body: '{ "result": 123 }')
+        stub_request(:post, "https://#{host}/xrpc/com.example.service.createApp").to_return_json(body: { result: 123 })
 
         expect { subject.post_request('com.example.service.createApp') }.to_not raise_error
 
@@ -42,10 +42,10 @@ shared_examples "unauthenticated user" do
     describe '#fetch_all' do
       it 'should not raise errors' do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.listRepos")
-          .to_return(body: '{ "repos": ["aaa"], "cursor": "x123" }')
+          .to_return_json(body: { "repos": ["aaa"], "cursor": "x123" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.listRepos?cursor=x123")
-          .to_return(body: '{ "repos": ["bbb"] }')
+          .to_return_json(body: { "repos": ["bbb"] })
 
         expect { subject.fetch_all('com.example.service.listRepos', field: 'repos') }.to_not raise_error
 

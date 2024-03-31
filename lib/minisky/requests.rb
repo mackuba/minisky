@@ -212,16 +212,15 @@ class Minisky
     def handle_response(response)
       status = response.code.to_i
       message = response.message
+      response_body = (response.content_type == 'application/json') ? JSON.parse(response.body) : response.body
 
       case response
       when Net::HTTPSuccess
-        JSON.parse(response.body)
+        response_body
       when Net::HTTPRedirection
         raise UnexpectedRedirect.new(status, message, response['location'])
       else
-        data = (response.content_type == 'application/json') ? JSON.parse(response.body) : response.body
-
-        error_class = if data.is_a?(Hash) && data['error'] == 'ExpiredToken'
+        error_class = if response_body.is_a?(Hash) && response_body['error'] == 'ExpiredToken'
           ExpiredTokenError
         elsif response.is_a?(Net::HTTPClientError)
           ClientErrorResponse
@@ -231,7 +230,7 @@ class Minisky
           BadResponse
         end
 
-        raise error_class.new(status, message, data)
+        raise error_class.new(status, message, response_body)
       end
     end
   end

@@ -3,7 +3,7 @@ shared_examples "fetch_all" do
     context 'when one page of items is returned' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return(body: '{ "items": ["one", "two", "three"] }')
+          .to_return_json(body: { "items": ["one", "two", "three"] })
       end
 
       it 'should make one request to the given endpoint' do
@@ -21,10 +21,10 @@ shared_examples "fetch_all" do
     context 'when more than one page of items is returned' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc111" }')
+          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "ccc111" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc111")
-          .to_return(body: '{ "items": ["four", "five"] }')
+          .to_return_json(body: { "items": ["four", "five"] })
       end
 
       it 'should make multiple requests, passing the last cursor' do
@@ -43,10 +43,10 @@ shared_examples "fetch_all" do
     context 'when params are passed' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?type=post")
-          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc222" }')
+          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "ccc222" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?type=post&cursor=ccc222")
-          .to_return(body: '{ "items": ["four", "five"] }')
+          .to_return_json(body: { "items": ["four", "five"] })
       end
 
       it 'should add the params to the url' do
@@ -62,10 +62,10 @@ shared_examples "fetch_all" do
     context 'when params are an explicit nil' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc222" }')
+          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "ccc222" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc222")
-          .to_return(body: '{ "items": ["four", "five"] }')
+          .to_return_json(body: { "items": ["four", "five"] })
       end
 
       it 'should not add anything to the url' do
@@ -79,10 +79,10 @@ shared_examples "fetch_all" do
     describe '…' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "ccc333" }')
+          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "ccc333" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333")
-          .to_return(body: '{ "items": ["four", "five"] }')
+          .to_return_json(body: { "items": ["four", "five"] })
       end
 
       include_examples "authorization",
@@ -98,13 +98,13 @@ shared_examples "fetch_all" do
     context 'when break condition is passed' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return(body: '{ "items": ["one", "two", "three"], "cursor": "page1" }')
+          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "page1" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1")
-          .to_return(body: '{ "items": ["four", "five"], "cursor": "page2" }')
+          .to_return_json(body: { "items": ["four", "five"], "cursor": "page2" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2")
-          .to_return(body: '{ "items": ["six"] }')
+          .to_return_json(body: { "items": ["six"] })
       end
 
       it 'should stop when a matching item is found' do
@@ -124,11 +124,13 @@ shared_examples "fetch_all" do
     context 'when max pages limit is passed' do
       before do
         stub_request(:get, %r(https://#{host}/xrpc/com.example.service.fetchAll(\?.*)?))
-          .to_return { |req|
-            params = req.uri.query_values || {}
-            page = params['cursor'].to_s.gsub(/page/, '').to_i
-            { body: JSON.generate({ items: ["item#{page}"], cursor: "page#{page + 1}" }) }
-          }
+          .to_return_json(
+            body: ->(req) {
+              params = req.uri.query_values || {}
+              page = params['cursor'].to_s.gsub(/page/, '').to_i
+              { items: ["item#{page}"], cursor: "page#{page + 1}" }
+            }
+          )
       end
 
       context 'and break_when is not passed' do
@@ -220,13 +222,13 @@ shared_examples "fetch_all" do
     describe 'progress param' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return(body: '{ "items": ["one"], "cursor": "page1" }')
+          .to_return_json(body: { "items": ["one"], "cursor": "page1" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1")
-          .to_return(body: '{ "items": ["two"], "cursor": "page2" }')
+          .to_return_json(body: { "items": ["two"], "cursor": "page2" })
 
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2")
-          .to_return(body: '{ "items": ["three"] }')
+          .to_return_json(body: { "items": ["three"] })
       end
 
       context 'when it is passed' do

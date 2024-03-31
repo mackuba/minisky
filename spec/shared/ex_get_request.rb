@@ -4,7 +4,7 @@ shared_examples "get_request" do
   describe '#get_request' do
     before do
       stub_request(:get, %r(https://#{host}/xrpc/com.example.service.getStuff(\?.*)?))
-        .to_return(body: '{ "result": 123 }')
+        .to_return_json(body: { "result": 123 })
     end
 
     it 'should make a request to the given XRPC endpoint' do

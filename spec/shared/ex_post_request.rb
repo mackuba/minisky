@@ -2,10 +2,10 @@ require_relative 'ex_authorization'
 
 shared_examples "post_request" do
   describe '#post_request' do
-    let(:response) {{ body: '{ "result": "ok" }' }}
+    let(:response) {{ body: { "result": "ok" }}}
 
     before do
-      stub_request(:post, "https://#{host}/xrpc/com.example.service.doStuff").to_return(response)
+      stub_request(:post, "https://#{host}/xrpc/com.example.service.doStuff").to_return_json(response)
     end
 
     it 'should make a request to the given XRPC endpoint' do
