@@ -2,10 +2,10 @@ require_relative 'ex_authorization'
 
 shared_examples "post_request" do
   describe '#post_request' do
-    let(:response) {{ body: { "result": "ok" }}}
+    let(:response) {{ body: '{ "result": "ok" }', headers: { 'Content-Type': 'application/json' }}}
 
     before do
-      stub_request(:post, "https://#{host}/xrpc/com.example.service.doStuff").to_return_json(response)
+      stub_request(:post, "https://#{host}/xrpc/com.example.service.doStuff").to_return(response)
     end
 
     it 'should make a request to the given XRPC endpoint' do
@@ -56,10 +56,22 @@ shared_examples "post_request" do
     end
 
     context 'if the response has a 4xx status' do
-      let(:response) {{ body: '{ "error": "message" }', status: 403 }}
+      let(:response) {{ body: '{ "error": "message" }', status: 403, headers: { 'Content-Type': 'application/json' }}}
 
       it 'should raise an error' do
         expect { subject.post_request('com.example.service.doStuff') }.to raise_error(Minisky::ClientErrorResponse)
+      end
+    end
+
+    context 'if the response has a 2xx status, but the response is not json' do
+      let(:response) {{ body: 'ok', status: 201, headers: { 'Content-Type': 'text/plain' }}}
+
+      it 'should not raise an error' do
+        expect { subject.post_request('com.example.service.doStuff') }.to_not raise_error
+      end
+
+      it 'should return the body as a string' do
+        subject.post_request('com.example.service.doStuff').should == 'ok'
       end
     end
 
