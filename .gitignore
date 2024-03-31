@@ -2,3 +2,4 @@
 .rspec_status
 *.yml
 example/*.json
+Gemfile.lock
