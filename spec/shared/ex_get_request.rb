@@ -45,6 +45,15 @@ shared_examples "get_request" do
       end
     end
 
+    context 'with headers' do
+      it 'should include the custom headers' do
+        subject.get_request('com.example.service.getStuff', { user: 'alf.gov' }, headers: { 'Food': 'cats' })
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff?user=alf.gov").once
+         .with(headers: { 'Food' => 'cats' })
+      end
+    end
+
     include_examples "authorization",
       request: ->(subject, params) { subject.get_request('com.example.service.getStuff', **params) },
       expected: ->(host) { [:get, "https://#{host}/xrpc/com.example.service.getStuff"] }

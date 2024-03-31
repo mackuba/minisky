@@ -64,6 +64,40 @@ shared_examples "post_request" do
       end
     end
 
+    context 'with headers' do
+      it 'should include the custom headers' do
+        subject.post_request('com.example.service.doStuff', 'blob', headers: { 'Blob-Type': 'blobby' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: 'blob', headers: { 'Blob-Type': 'blobby' })
+      end
+
+      it 'should set content type to application/json' do
+        subject.post_request('com.example.service.doStuff', 'blob', headers: { 'Blob-Type': 'blobby' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: 'blob', headers: { 'Content-Type': 'application/json' })
+      end
+    end
+
+    context 'with headers overriding Content-Type' do
+      it 'should include the custom Content-Type' do
+        subject.post_request('com.example.service.doStuff', 'blob', headers: { 'Content-Type': 'image/png' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: 'blob', headers: { 'Content-Type': 'image/png' })
+      end
+    end
+
+    context 'with headers overriding content-type in lowercase' do
+      it 'should still only include the custom Content-Type' do
+        subject.post_request('com.example.service.doStuff', 'blob', headers: { 'content-type': 'image/jpeg' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: 'blob', headers: { 'content-type': 'image/jpeg' })
+      end
+    end
+
     context 'if the response has a 4xx status' do
       let(:response) {{ body: '{ "error": "message" }', status: 403, headers: { 'Content-Type': 'application/json' }}}
 
