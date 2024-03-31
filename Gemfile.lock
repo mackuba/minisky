@@ -1,0 +1,63 @@
+PATH
+  remote: .
+  specs:
+    minisky (0.3.1)
+      base64 (~> 0.1)
+      json (~> 2.5)
+      net-http (~> 0.2)
+      time (~> 0.3)
+      uri (~> 0.13)
+      yaml (~> 0.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.8.5)
+      public_suffix (>= 2.0.2, < 6.0)
+    base64 (0.2.0)
+    crack (0.4.5)
+      rexml
+    date (3.3.4)
+    diff-lcs (1.5.0)
+    fakefs (2.5.0)
+    hashdiff (1.0.1)
+    json (2.7.1)
+    net-http (0.4.1)
+      uri
+    public_suffix (5.0.3)
+    rake (13.0.6)
+    rexml (3.2.6)
+    rspec (3.12.0)
+      rspec-core (~> 3.12.0)
+      rspec-expectations (~> 3.12.0)
+      rspec-mocks (~> 3.12.0)
+    rspec-core (3.12.2)
+      rspec-support (~> 3.12.0)
+    rspec-expectations (3.12.3)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.12.0)
+    rspec-mocks (3.12.6)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.12.0)
+    rspec-support (3.12.1)
+    time (0.3.0)
+      date
+    uri (0.13.0)
+    webmock (3.19.1)
+      addressable (>= 2.8.0)
+      crack (>= 0.3.2)
+      hashdiff (>= 0.4.0, < 2.0.0)
+    yaml (0.3.0)
+
+PLATFORMS
+  arm64-darwin-21
+
+DEPENDENCIES
+  fakefs (~> 2.5)
+  minisky!
+  rake (~> 13.0)
+  rspec (~> 3.12)
+  webmock (~> 3.19)
+
+BUNDLED WITH
+   2.5.7
