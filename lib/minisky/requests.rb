@@ -49,10 +49,10 @@ class Minisky
       @user ||= User.new(config)
     end
 
-    def get_request(method, params = nil, auth: default_auth_mode)
+    def get_request(method, params = nil, auth: default_auth_mode, headers: nil)
       check_access if auto_manage_tokens && auth == true
 
-      headers = authentication_header(auth)
+      headers = authentication_header(auth).merge(headers || {})
       url = URI("#{base_url}/#{method}")
 
       if params && !params.empty?
@@ -65,10 +65,12 @@ class Minisky
       handle_response(response)
     end
 
-    def post_request(method, params = nil, auth: default_auth_mode)
+    def post_request(method, params = nil, auth: default_auth_mode, headers: nil)
       check_access if auto_manage_tokens && auth == true
 
-      headers = authentication_header(auth).merge({ "Content-Type" => "application/json" })
+      headers = authentication_header(auth).merge(headers || {})
+      headers["Content-Type"] = "application/json" unless headers.keys.any? { |k| k.to_s.downcase == 'content-type' }
+
       body = params ? params.to_json : ''
 
       response = Net::HTTP.post(URI("#{base_url}/#{method}"), body, headers)
@@ -76,7 +78,7 @@ class Minisky
     end
 
     def fetch_all(method, params = nil, field:,
-                  auth: default_auth_mode, break_when: nil, max_pages: nil, progress: @default_progress)
+                  auth: default_auth_mode, break_when: nil, max_pages: nil, headers: nil, progress: @default_progress)
       data = []
       params = {} if params.nil?
       pages = 0
@@ -84,7 +86,7 @@ class Minisky
       loop do
         print(progress) if progress
 
-        response = get_request(method, params, auth: auth)
+        response = get_request(method, params, auth: auth, headers: headers)
         records = response[field]
         cursor = response['cursor']
 
