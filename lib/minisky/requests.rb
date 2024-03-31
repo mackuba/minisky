@@ -60,9 +60,7 @@ class Minisky
         url.query = URI.encode_www_form(params)
       end
 
-      request = Net::HTTP::Get.new(url, headers)
-
-      response = make_request(request)
+      response = Net::HTTP.get_response(url, headers)
       handle_response(response)
     end
 
@@ -174,13 +172,6 @@ class Minisky
 
 
     private
-
-    def make_request(request)
-      # this long form is needed because #get_response only supports a headers param in Ruby 3.x
-      response = Net::HTTP.start(request.uri.hostname, request.uri.port, use_ssl: true) do |http|
-        http.request(request)
-      end
-    end
 
     def default_auth_mode
       !!send_auth_headers
