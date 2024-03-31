@@ -71,7 +71,11 @@ class Minisky
       headers = authentication_header(auth).merge(headers || {})
       headers["Content-Type"] = "application/json" unless headers.keys.any? { |k| k.to_s.downcase == 'content-type' }
 
-      body = params ? params.to_json : ''
+      body = if params.is_a?(String) || params.nil?
+        params.to_s
+      else
+        params.to_json
+      end
 
       response = Net::HTTP.post(URI("#{base_url}/#{method}"), body, headers)
       handle_response(response)
