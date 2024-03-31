@@ -1,3 +1,12 @@
+## [0.4.0] - 2024-03-31 🐣
+
+* allow passing non-JSON body to requests (e.g. when uploading blobs)
+* allow passing custom headers to requests, including overriding `Content-Type`
+* fixed error when the response is success but not JSON (e.g. an empty body like in deleteRecord)
+* allow passing options to the client in the initializer
+* aliased `default_progress` setting as `progress`
+* added `base64` dependency explicitly to the gemspec - fixes a warning in Ruby 3.3, since it will be extracted as an optional gem in 3.4
+
 ## [0.3.1] - 2023-10-10
 
 * fixed Minisky not working on Ruby 2.x
