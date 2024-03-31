@@ -55,6 +55,15 @@ shared_examples "post_request" do
       end
     end
 
+    context 'if params is a string' do
+      it 'should send that string' do
+        subject.post_request('com.example.service.doStuff', 'hello world')
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: 'hello world')
+      end
+    end
+
     context 'if the response has a 4xx status' do
       let(:response) {{ body: '{ "error": "message" }', status: 403, headers: { 'Content-Type': 'application/json' }}}
 
