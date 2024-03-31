@@ -161,14 +161,14 @@ class Minisky
       alias_method :do_post_request, :post_request
       private :do_get_request, :do_post_request
 
-      def get_request(method, params = nil, auth: default_auth_mode, **kwargs)
+      def get_request(method, params = nil, auth: default_auth_mode, headers: nil, **kwargs)
         params ||= kwargs unless kwargs.empty?
-        do_get_request(method, params, auth: auth)
+        do_get_request(method, params, auth: auth, headers: headers)
       end
 
-      def post_request(method, params = nil, auth: default_auth_mode, **kwargs)
+      def post_request(method, params = nil, auth: default_auth_mode, headers: nil, **kwargs)
         params ||= kwargs unless kwargs.empty?
-        do_post_request(method, params, auth: auth)
+        do_post_request(method, params, auth: auth, headers: headers)
       end
     end
 
