@@ -82,8 +82,8 @@ class Minisky
       handle_response(response)
     end
 
-    def fetch_all(method, params = nil, field:,
-                  auth: default_auth_mode, break_when: nil, max_pages: nil, headers: nil, progress: @default_progress)
+    def fetch_all(method, params = nil, auth: default_auth_mode,
+                  field: nil, break_when: nil, max_pages: nil, headers: nil, progress: @default_progress)
       data = []
       params = {} if params.nil?
       pages = 0
@@ -92,6 +92,11 @@ class Minisky
         print(progress) if progress
 
         response = get_request(method, params, auth: auth, headers: headers)
+
+        if field.nil?
+          raise FieldNotSetError, response.keys.select { |f| response[f].is_a?(Array) }
+        end
+
         records = response[field]
         cursor = response['cursor']
 

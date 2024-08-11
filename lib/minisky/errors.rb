@@ -52,4 +52,13 @@ class Minisky
       @location = location
     end
   end
+
+  class FieldNotSetError < Error
+    attr_reader :fields
+
+    def initialize(fields)
+      @fields = fields
+      super("Field parameter not provided; available fields: #{@fields.inspect}")
+    end
+  end
 end
