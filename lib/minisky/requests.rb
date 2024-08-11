@@ -18,7 +18,7 @@ class Minisky
     end
 
     def method_missing(name, *args)
-      if name.end_with?('=')
+      if name.to_s.end_with?('=')
         @config[name.to_s.chop] = args[0]
       else
         @config[name.to_s]
