@@ -15,7 +15,7 @@ if handle.empty?
 end
 
 pds_host = DID.resolve_handle(handle).get_document.pds_endpoint
-pds = Minisky.new(pds_host.gsub('https://', ''), nil, progress: '.')
+pds = Minisky.new(pds_host, nil, progress: '.')
 
 print "Fetching all follows of @#{handle} from #{pds_host}: "
 

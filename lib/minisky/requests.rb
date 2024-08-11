@@ -43,7 +43,11 @@ class Minisky
     alias progress= default_progress=
 
     def base_url
-      @base_url ||= "https://#{host}/xrpc"
+      if host.include?('://')
+        host.chomp('/') + '/xrpc'
+      else
+        "https://#{host}/xrpc"
+      end
     end
 
     def user
