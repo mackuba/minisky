@@ -2,6 +2,8 @@
 
 Minisky is a minimal client of the Bluesky (ATProto) API. It provides a simple API client class that you can use to log in to the Bluesky API and make any GET and POST requests there. It's meant to be an easy way to start playing and experimenting with the AT Protocol API.
 
+This is designed as a low-level XRPC client library - it purposefully does not include any convenience methods like "get posts" or "get profile" etc., it only provides base components that you could use to build a higher level API.
+
 > [!NOTE]
 > ATProto Ruby gems collection: [skyfall](https://github.com/mackuba/skyfall) | [blue_factory](https://github.com/mackuba/blue_factory) | [minisky](https://github.com/mackuba/minisky) | [didkit](https://github.com/mackuba/didkit)
 
@@ -16,7 +18,7 @@ To install the Minisky gem, run the command:
 
 Or alternatively, add it to the `Gemfile` file for Bundler:
 
-    gem 'minisky', '~> 0.3'
+    gem 'minisky', '~> 0.4'
 
 
 ## Usage
@@ -34,13 +36,20 @@ This allows you to do things like:
 - look up profile information about any account
 - load complete threads or users' profile feeds from the AppView
 
-To use Minisky this way, create a `Minisky` instance passing the API hostname string (at the moment there is only one server at `bsky.social`, but there will be more once federation support goes live) and `nil` as the configuration in the arguments:
+To use Minisky this way, create a `Minisky` instance, passing the API hostname string and `nil` as the configuration in the arguments. Use the hostname `api.bsky.app` or `public.api.bsky.app` for the AppView, or a PDS hostname for the `com.atproto.*` raw data endpoints:
 
 ```rb
 require 'minisky'
 
-bsky = Minisky.new('bsky.social', nil)
+bsky = Minisky.new('api.bsky.app', nil)
 ```
+
+> [!NOTE]
+> To call PDS endpoints like `getRecord` or `listRecords`, you need to connect to the PDS of the user whose data you're loading, not to yours (unless it's the same one). Alternatively, you can use the `bsky.social` "entryway" PDS hostname for any Bluesky-hosted accounts, but this will not work for self-hosted accounts.
+>
+> To look up the PDS hostname of a user given their handle or DID, you can use the [didkit](https://github.com/mackuba/didkit) library.
+>
+> For the AppView, `api.bsky.app` connects directly to Bluesky's AppView, and `public.api.bsky.app` to a version with extra caching that will usually be faster.
 
 
 ### Authenticated access
@@ -56,9 +65,12 @@ pass: very-secret-password
 
 The `id` can be either your handle, or your DID, or the email you've used to sign up. It's recommended that you use the "app password" that you can create in the settings instead of your main account password.
 
+> [!NOTE]
+> Bluesky has recently implemented OAuth, but Minisky doesn't support it yet - it will be added in a future version. App passwords should still be supported for a fairly long time.
+
 After you log in, this file will also be used to store your access & request tokens and DID. The data in the config file can be accessed through a `user` wrapper property that exposes them as methods, e.g. the password is available as `user.pass` and the DID as `user.did`.
 
-Next, create the Minisky client instance, passing the server name and the config file name:
+Next, create the Minisky client instance, passing your PDS hostname (for Bluesky-hosted PDSes, you can use either `bsky.social` or your specific PDS like `amanita.us-east.host.bsky.network`) and the name of the config file:
 
 ```rb
 require 'minisky'
@@ -96,7 +108,7 @@ bsky.post_request('com.atproto.repo.createRecord', {
 
 In authenticated mode, the requests use the saved access token for auth headers automatically. You can also pass `auth: false` or `auth: nil` to not send any authentication headers for a given request, or `auth: sometoken` to use a specific other token. In unauthenticated mode, sending of auth headers is disabled.
 
-The third useful method you can use is `#fetch_all`, which loads multiple paginated responses and collects all returned items on a single list (you need to pass the name of the field that contains the items in the response). Optionally, you can also specify a limit of pages to load as `max_pages: n`, or a break condition `break_when` to stop fetching when any item matches it. You can use it to e.g. to fetch all of your posts from the last 30 days, but not earlier:
+The third useful method you can use is `#fetch_all`, which loads multiple paginated responses and collects all returned items on a single list (you need to pass the name of the field that contains the items in the response). Optionally, you can also specify a limit of pages to load as `max_pages: n`, or a break condition `break_when` to stop fetching when any item matches it. You can use it to e.g. to fetch all of your posts from the last 30 days but not earlier:
 
 ```rb
 time_limit = Time.now - 86400 * 30
@@ -180,7 +192,7 @@ The class needs to provide:
 
 ## Credits
 
-Copyright © 2023 Kuba Suder ([@mackuba.eu](https://bsky.app/profile/mackuba.eu)).
+Copyright © 2024 Kuba Suder ([@mackuba.eu](https://bsky.app/profile/mackuba.eu)).
 
 The code is available under the terms of the [zlib license](https://choosealicense.com/licenses/zlib/) (permissive, similar to MIT).
 
