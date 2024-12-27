@@ -166,6 +166,22 @@ class Minisky
       json
     end
 
+    def token_expiration_date(token)
+      parts = token.split('.')
+      raise AuthError, "Invalid access token format" unless parts.length == 3
+
+      begin
+        payload = JSON.parse(Base64.decode64(parts[1]))
+      rescue JSON::ParserError
+        raise AuthError, "Couldn't decode payload from access token"
+      end
+
+      exp = payload['exp']
+      raise AuthError, "Invalid token expiry data" unless exp.is_a?(Numeric) && exp > 0
+
+      Time.at(exp)
+    end
+
     def access_token_expired?
       token_expiration_date(user.access_token) < Time.now + 60
     end
@@ -231,22 +247,6 @@ class Minisky
       else
         {}
       end
-    end
-
-    def token_expiration_date(token)
-      parts = token.split('.')
-      raise AuthError, "Invalid access token format" unless parts.length == 3
-
-      begin
-        payload = JSON.parse(Base64.decode64(parts[1]))
-      rescue JSON::ParserError
-        raise AuthError, "Couldn't decode payload from access token"
-      end
-
-      exp = payload['exp']
-      raise AuthError, "Invalid token expiry data" unless exp.is_a?(Numeric) && exp > 0
-
-      Time.at(exp)
     end
 
     def handle_response(response)
