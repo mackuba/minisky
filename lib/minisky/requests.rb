@@ -72,19 +72,24 @@ class Minisky
       handle_response(response)
     end
 
-    def post_request(method, params = nil, auth: default_auth_mode, headers: nil)
+    def post_request(method, data = nil, auth: default_auth_mode, headers: nil, params: nil)
       check_access if auto_manage_tokens && auth == true
 
       headers = authentication_header(auth).merge(headers || {})
       headers["Content-Type"] = "application/json" unless headers.keys.any? { |k| k.to_s.downcase == 'content-type' }
 
-      body = if params.is_a?(String) || params.nil?
-        params.to_s
+      body = if data.is_a?(String) || data.nil?
+        data.to_s
       else
-        params.to_json
+        data.to_json
       end
 
       url = build_request_uri(method)
+
+      if params && !params.empty?
+        url.query = URI.encode_www_form(params)
+      end
+
       response = Net::HTTP.post(url, body, headers)
       handle_response(response)
     end
