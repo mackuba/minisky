@@ -60,7 +60,7 @@ missing.each do |did|
   end
 
   # check account status on their assigned PDS
-  pds = Minisky.new(doc.pds_endpoint.gsub('http://', ''), nil)
+  pds = Minisky.new(doc.pds_endpoint, nil)
   status = pds.get_request('com.atproto.sync.getRepoStatus', { did: did }).slice('status', 'active') rescue 'deleted'
 
   puts "#{did} (@#{doc.handles.first}) => #{status}"
