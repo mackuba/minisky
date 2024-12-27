@@ -127,8 +127,12 @@ class Minisky
     def check_access
       if !user.logged_in?
         log_in
+        :logged_in
       elsif access_token_expired?
         perform_token_refresh
+        :refreshed
+      else
+        :ok
       end
     end
 
