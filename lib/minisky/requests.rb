@@ -26,6 +26,8 @@ class Minisky
     end
   end
 
+  NSID_REGEXP = /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z]{0,61}[a-zA-Z])?)$/
+
   module Requests
     attr_accessor :default_progress
     attr_writer :send_auth_headers
@@ -58,7 +60,7 @@ class Minisky
       check_access if auto_manage_tokens && auth == true
 
       headers = authentication_header(auth).merge(headers || {})
-      url = URI("#{base_url}/#{method}")
+      url = build_request_uri(method)
 
       if params && !params.empty?
         url.query = URI.encode_www_form(params)
@@ -82,7 +84,8 @@ class Minisky
         params.to_json
       end
 
-      response = Net::HTTP.post(URI("#{base_url}/#{method}"), body, headers)
+      url = build_request_uri(method)
+      response = Net::HTTP.post(url, body, headers)
       handle_response(response)
     end
 
@@ -188,6 +191,18 @@ class Minisky
       # this long form is needed because #get_response only supports a headers param in Ruby 3.x
       response = Net::HTTP.start(request.uri.hostname, request.uri.port, use_ssl: true) do |http|
         http.request(request)
+      end
+    end
+
+    def build_request_uri(method)
+      if method.is_a?(URI)
+        method
+      elsif method.include?('://')
+        URI(method)
+      elsif method =~ NSID_REGEXP
+        URI("#{base_url}/#{method}")
+      else
+        raise ArgumentError, "Invalid method name #{method.inspect} (should be an NSID, URL or an URI object)"
       end
     end
 
