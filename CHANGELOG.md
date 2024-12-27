@@ -1,3 +1,15 @@
+## [0.5.0] - 2024-12-27 🎄
+
+* `host` param in the initializer can be passed with a `https://` prefix (useful if you're passing it directly from a DID document, e.g. using DIDKit)
+* added validation of the `method` parameter in request calls: it needs to be either a proper NSID, or a full URL as a string or a URI object
+* added new optional `params` keyword argument in `post_request`, which lets you append query parameters to the URL if a POST endpoint requires passing them this way
+* `default_progress` is set by default to show progress using dots (`.`) if Minisky is loaded inside an IRB or Pry context
+* when experimenting with Minisky in the console, you can now skip the `field:` parameter to `fetch_all` if you don't remember the expected key name in the response, and the method will make a request and return an error which tells you the list of available keys
+* added `access_token_expired?` helper method
+* moved `token_expiration_date` to public methods
+* `check_access` now returns a result symbol: `:logged_in`, `:refreshed` or `:ok`
+* fixed `method_missing` setter on `User`
+
 ## [0.4.0] - 2024-03-31 🐣
 
 * allow passing non-JSON body to requests (e.g. when uploading blobs)

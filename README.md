@@ -18,7 +18,7 @@ To install the Minisky gem, run the command:
 
 Or alternatively, add it to the `Gemfile` file for Bundler:
 
-    gem 'minisky', '~> 0.4'
+    gem 'minisky', '~> 0.5'
 
 
 ## Usage
@@ -142,7 +142,7 @@ You can find more examples in the [example](https://github.com/mackuba/minisky/t
 
 The `Minisky` client currently supports such configuration options:
 
-- `default_progress` - a progress character to automatically use for `#fetch_all` calls (default: `nil`)
+- `default_progress` - a progress character to automatically use for `#fetch_all` calls (default: `.` when in an interactive console, `nil` otherwise)
 - `send_auth_headers` - whether auth headers should be added by default (default: `true` in authenticated mode)
 - `auto_manage_tokens` - whether access tokens should be generated and refreshed automatically when needed (default: `true` in authenticated mode)
 
