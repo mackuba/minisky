@@ -127,7 +127,7 @@ class Minisky
     def check_access
       if !user.logged_in?
         log_in
-      elsif token_expiration_date(user.access_token) < Time.now + 60
+      elsif access_token_expired?
         perform_token_refresh
       end
     end
@@ -164,6 +164,10 @@ class Minisky
 
       save_config
       json
+    end
+
+    def access_token_expired?
+      token_expiration_date(user.access_token) < Time.now + 60
     end
 
     def reset_tokens
