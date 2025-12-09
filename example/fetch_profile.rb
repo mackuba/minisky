@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
-# Example: fetch the profile info of a given user and their last 10 posts (excluding reposts).
+# Example: fetch profile info of a given user and their last 10 posts (excluding reposts).
 #
-# This script connects to the AppView server at api.bsky.app, which allows calling such endpoints as getProfile or
-# getAuthorFeed without authentication.
+# This script connects to the AppView server at api.bsky.app, which allows calling such
+# endpoints as getProfile or getAuthorFeed without authentication.
 
 # load minisky from a local folder - you normally won't need this
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
@@ -24,8 +24,13 @@ bsky = Minisky.new('api.bsky.app', nil)
 # fetch profile info
 profile = bsky.get_request('app.bsky.actor.getProfile', { actor: handle })
 
-# fetch posts, without replies - we fetch a bit more than we need because we'll also filter out reposts
-posts = bsky.get_request('app.bsky.feed.getAuthorFeed', { actor: handle, filter: 'posts_no_replies', limit: 40 })
+# fetch posts, without replies - we fetch a bit more than we need because we'll also
+# filter out reposts
+posts = bsky.get_request('app.bsky.feed.getAuthorFeed', {
+  actor: handle,
+  filter: 'posts_no_replies',
+  limit: 40
+})
 
 # print the profile
 

@@ -2,11 +2,13 @@
 
 # Example: print 10 latest posts from the user's home feed.
 # 
-# Instead of using a config file to read & store authentication info, this example uses a customized client class
-# which reads the password from the console and creates a throwaway access token.
+# Instead of using a config file to read & store authentication info, this example
+# uses a customized client class which reads the password from the console and creates
+# a throwaway access token.
 #
-# This approach makes sense for one-off scripts, but it shouldn't be used for things that need to be done repeatedly
-# and often (the authentication-related endpoints have lower rate limits than others).
+# This approach makes sense for one-off scripts, but it shouldn't be used for things
+# that need to be done repeatedly and often (the authentication-related endpoints have
+# lower rate limits than others).
 
 # load minisky from a local folder - you normally won't need this
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))

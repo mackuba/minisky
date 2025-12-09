@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
-# Example: fetch the list of accounts followed by a given user and check which of them have been deleted / deactivated.
+# Example: fetch the list of accounts followed by a given user and check which of them
+# have been deleted / deactivated.
 
 # load minisky from a local folder - you normally won't need this
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
@@ -61,7 +62,12 @@ missing.each do |did|
 
   # check account status on their assigned PDS
   pds = Minisky.new(doc.pds_endpoint, nil)
-  status = pds.get_request('com.atproto.sync.getRepoStatus', { did: did }).slice('status', 'active') rescue 'deleted'
+  status = begin
+    data = pds.get_request('com.atproto.sync.getRepoStatus', { did: did })
+    data.slice('status', 'active')
+  rescue StandardError => e
+    'deleted'
+  end
 
   puts "#{did} (@#{doc.handles.first}) => #{status}"
 end

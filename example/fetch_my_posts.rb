@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 
-# Example: sync all posts from your account (excluding replies and reposts) to a local JSON file. When run again, it
-# will only fetch new posts since the last time and append them to the file.
+# Example: sync all posts from your account (excluding replies and reposts) to a local
+# JSON file. When run again, it will only fetch new posts since the last time and
+# append them to the file.
 #
 # Requires a bluesky.yml config file in the same directory with contents like this:
 # id: your.handle
