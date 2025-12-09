@@ -5,7 +5,7 @@ Minisky is a minimal client of the Bluesky (ATProto) API. It provides a simple A
 This is designed as a low-level XRPC client library - it purposefully does not include any convenience methods like "get posts" or "get profile" etc., it only provides base components that you could use to build a higher level API.
 
 > [!NOTE]
-> ATProto Ruby gems collection: [skyfall](https://github.com/mackuba/skyfall) | [blue_factory](https://github.com/mackuba/blue_factory) | [minisky](https://github.com/mackuba/minisky) | [didkit](https://github.com/mackuba/didkit)
+> Part of ATProto Ruby SDK: [ruby.sdk.blue](https://ruby.sdk.blue)
 
 
 ## Installation
