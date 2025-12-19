@@ -47,7 +47,7 @@ bsky = Minisky.new('api.bsky.app', nil)
 > [!NOTE]
 > To call PDS endpoints like `getRecord` or `listRecords`, you need to connect to the PDS of the user whose data you're loading, not to yours (unless it's the same one). Alternatively, you can use the `bsky.social` "entryway" PDS hostname for any Bluesky-hosted accounts, but this will not work for self-hosted accounts.
 >
-> To look up the PDS hostname of a user given their handle or DID, you can use the [didkit](https://github.com/mackuba/didkit) library.
+> To look up the PDS hostname of a user given their handle or DID, you can use the [didkit](https://tangled.org/mackuba.eu/didkit) library.
 >
 > For the AppView, `api.bsky.app` connects directly to Bluesky's AppView, and `public.api.bsky.app` to a version with extra caching that will usually be faster.
 

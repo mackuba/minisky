@@ -10,15 +10,15 @@ Gem::Specification.new do |spec|
 
   spec.summary = "A minimal client of Bluesky/AtProto API"
   spec.description = "A very simple client class that lets you log in to the Bluesky API and make any requests there."
-  spec.homepage = "https://github.com/mackuba/minisky"
+  spec.homepage = "https://ruby.sdk.blue"
 
   spec.license = "Zlib"
   spec.required_ruby_version = ">= 2.6.0"
 
   spec.metadata = {
-    "bug_tracker_uri"   => "https://github.com/mackuba/minisky/issues",
-    "changelog_uri"     => "https://github.com/mackuba/minisky/blob/master/CHANGELOG.md",
-    "source_code_uri"   => "https://github.com/mackuba/minisky",
+    "bug_tracker_uri"   => "https://tangled.org/mackuba.eu/minisky/issues",
+    "changelog_uri"     => "https://tangled.org/mackuba.eu/minisky/blob/master/CHANGELOG.md",
+    "source_code_uri"   => "https://tangled.org/mackuba.eu/minisky",
   }
 
   spec.files = Dir.chdir(__dir__) do
