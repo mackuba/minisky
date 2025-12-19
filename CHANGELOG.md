@@ -51,7 +51,7 @@
 * renamed `ident` field in the config hash to `id`
 * config is now accessed in `Requests` from the client object as a `config` property instead of `@config` ivar
 * config fields are exposed as a `user` wrapper object, e.g. `user.did` delegates to `@config['did']`
-  
+
 ## [0.1.0] - 2023-09-01
 
 - extracted most code to a `Requests` module that can be included into a different client class with custom config handling

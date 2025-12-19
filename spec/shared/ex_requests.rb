@@ -74,7 +74,7 @@ shared_examples "Requests" do |host|
   describe '#perform_token_refresh' do
     let(:response_json) {{
       "accessJwt" => "aaaa1234",
-      "refreshJwt" => "rrrr1234"      
+      "refreshJwt" => "rrrr1234"
     }}
 
     before do
