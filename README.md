@@ -135,7 +135,7 @@ This will output a line like this:
 .................
 ```
 
-You can find more examples in the [example](https://github.com/mackuba/minisky/tree/master/example) directory.
+You can find more examples on the [examples page](https://ruby.sdk.blue/examples/) on [ruby.sdk.blue](https://ruby.sdk.blue).
 
 
 ## Customization
