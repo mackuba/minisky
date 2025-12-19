@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Kuba Suder"]
   spec.email = ["jakub.suder@gmail.com"]
 
-  spec.summary = "A minimal client of Bluesky/AtProto API"
+  spec.summary = "A minimal client of Bluesky/ATProto API"
   spec.description = "A very simple client class that lets you log in to the Bluesky API and make any requests there."
   spec.homepage = "https://ruby.sdk.blue"
 
