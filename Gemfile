@@ -7,6 +7,6 @@ gemspec
 
 gem 'rake', '~> 13.0'
 gem 'rspec', '~> 3.12'
-gem 'fakefs', '~> 2.5'
+gem 'fakefs', '~> 1.8'
 gem 'webmock', '~> 3.19'
 gem 'irb'
