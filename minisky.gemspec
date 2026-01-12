@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "lib/minisky/version"
+minisky_version = File.read(File.join(__dir__, 'lib', 'minisky', 'version.rb')).match(/VERSION = "(.*)"/)[1]
 
 Gem::Specification.new do |spec|
   spec.name = "minisky"
-  spec.version = Minisky::VERSION
+  spec.version = minisky_version
   spec.authors = ["Kuba Suder"]
   spec.email = ["jakub.suder@gmail.com"]
 
