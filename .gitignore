@@ -1,5 +1,7 @@
 .bundle
 .rspec_status
+.yardoc
 *.yml
+doc
 example/*.json
 Gemfile.lock
