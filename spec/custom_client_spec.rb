@@ -1,21 +1,28 @@
 require 'json'
 require_relative 'shared/ex_unauthed'
 
+# Custom JSON-backed client for request specs.
 class CustomJSONClient
+  # @return [String] path to the test JSON config
   CONFIG_FILE = 'test.json'
 
+  # Request helpers for the test client.
   include Minisky::Requests
 
+  # @return [Hash] parsed configuration data
   attr_reader :config
 
+  # @return [void]
   def initialize
     @config = JSON.parse(File.read(CONFIG_FILE))
   end
 
+  # @return [String] test host name
   def host
     'at.x.com'
   end
 
+  # @return [void]
   def save_config
     File.write(CONFIG_FILE, JSON.generate(@config))
   end
