@@ -2,6 +2,7 @@
 .rspec_status
 .yardoc
 *.yml
+coverage
 doc
 example/*.json
 Gemfile.lock
