@@ -1,3 +1,4 @@
 --protected
 --no-private
+--default-return nil
 --markup markdown
