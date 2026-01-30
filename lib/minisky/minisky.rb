@@ -69,14 +69,17 @@ class Minisky
     end
   end
 
+  def save_config
+    File.write(@config_file, YAML.dump(@config)) if @config_file
+  end
+
+
+  private
+
   def active_repl?
     return true if defined?(IRB) && IRB.respond_to?(:CurrentContext) && IRB.CurrentContext
     return true if defined?(Pry) && Pry.respond_to?(:cli) && Pry.cli
     false
-  end
-
-  def save_config
-    File.write(@config_file, YAML.dump(@config)) if @config_file
   end
 end
 
