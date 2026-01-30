@@ -417,7 +417,7 @@ class Minisky
 
     def make_request(request)
       # this long form is needed because #get_response only supports a headers param in Ruby 3.x
-      response = Net::HTTP.start(request.uri.hostname, request.uri.port, use_ssl: true) do |http|
+      response = Net::HTTP.start(request.uri.hostname, request.uri.port, use_ssl: (request.uri.scheme == 'https')) do |http|
         http.request(request)
       end
     end
