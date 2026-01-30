@@ -408,7 +408,7 @@ class Minisky
     end
 
     if RUBY_VERSION.to_i == 2
-      require_relative 'ruby2_compat'
+      require_relative 'compat'
       prepend Ruby2Compat
     end
 
