@@ -280,7 +280,7 @@ class Minisky
         params[:cursor] = cursor
         pages += 1
 
-        break if !cursor || records.empty? || pages == max_pages
+        break if !cursor || pages == max_pages
         break if break_when && records.any? { |x| break_when.call(x) }
       end
 
