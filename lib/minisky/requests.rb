@@ -408,19 +408,8 @@ class Minisky
     end
 
     if RUBY_VERSION.to_i == 2
-      alias_method :do_get_request, :get_request
-      alias_method :do_post_request, :post_request
-      private :do_get_request, :do_post_request
-
-      def get_request(method, params = nil, auth: default_auth_mode, headers: nil, **kwargs)
-        params ||= kwargs unless kwargs.empty?
-        do_get_request(method, params, auth: auth, headers: headers)
-      end
-
-      def post_request(method, params = nil, auth: default_auth_mode, headers: nil, **kwargs)
-        params ||= kwargs unless kwargs.empty?
-        do_post_request(method, params, auth: auth, headers: headers)
-      end
+      require_relative 'ruby2_compat'
+      prepend Ruby2Compat
     end
 
 
