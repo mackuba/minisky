@@ -1,3 +1,11 @@
+## Unreleased
+
+* don't stop fetching in `fetch_all` if an empty page is returned but the cursor is not nil; it's technically allowed for the server to return an empty page but still have more data to send
+* in `post_request`, don't set Content-Type to "application/json" if the data sent is a string or nil (it might cause an error in some cases)
+* allow connecting to non-HTTPS servers (e.g. `http://localhost:3000`)
+* deprecate logging in using an email address in the `id` field – `createSession` accepts such identifier, but unlike with handle or DID, there's no way to use it to look up the DID document and PDS location if we wanted to
+* marked `Minisky#active_repl?` method as private
+
 ## [0.5.0] - 2024-12-27 🎄
 
 * `host` param in the initializer can be passed with a `https://` prefix (useful if you're passing it directly from a DID document, e.g. using DIDKit)
@@ -17,7 +25,7 @@
 * fixed error when the response is success but not JSON (e.g. an empty body like in deleteRecord)
 * allow passing options to the client in the initializer
 * aliased `default_progress` setting as `progress`
-* added `base64` dependency explicitly to the gemspec - fixes a warning in Ruby 3.3, since it will be extracted as an optional gem in 3.4
+* added `base64` dependency explicitly to the gemspec – fixes a warning in Ruby 3.3, since it will be extracted as an optional gem in 3.4
 
 ## [0.3.1] - 2023-10-10
 
@@ -28,11 +36,11 @@
 * authentication improvements & changes:
   - Minisky now automatically manages access tokens, calling `check_access` manually is not necessary (set `auto_manage_tokens` to `false` to disable this)
   - `check_access` now just checks token's expiry time instead of making a request to `getSession`
-  - added `send_auth_headers` option - set to `false` to not set auth header automatically, which is the default
-  - removed default config file name - explicit file name is now required
-  - Minisky can now be used in unauthenticated mode - pass `nil` as the config file name
+  - added `send_auth_headers` option – set to `false` to not set auth header automatically, which is the default
+  - removed default config file name – explicit file name is now required
+  - Minisky can now be used in unauthenticated mode – pass `nil` as the config file name
   - added `reset_tokens` helper method
-* refactored response handling - typed errors are now raised on non-success response status
+* refactored response handling – typed errors are now raised on non-success response status
 * `user` wrapper can also be used for writing fields to the config
 * improved error handling
 
@@ -62,7 +70,7 @@
 
 ## [0.0.1] - 2023-08-30
 
-Initial release - extracted from original gist:
+Initial release – extracted from original gist:
 
 - logging in and refreshing the token
 - making GET & POST requests
