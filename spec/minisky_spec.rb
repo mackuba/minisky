@@ -147,6 +147,116 @@ describe Minisky do
     minisky.auto_manage_tokens.should == false
     minisky.default_progress.should == '*'
   end
+
+  describe '#token_expiration_date' do
+    subject { Minisky.new(host, nil) }
+
+    it 'should return nil for tokens with invalid encoding' do
+      token = "bad\xC3".force_encoding('UTF-8')
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return nil when the token does not have three parts' do
+      subject.token_expiration_date('token').should be_nil
+      subject.token_expiration_date('one.two').should be_nil
+      subject.token_expiration_date('1.2.3.4').should be_nil
+
+      token = make_token(Time.now + 3600)
+      subject.token_expiration_date(token + '.qwe').should be_nil
+    end
+
+    it 'should return nil when the payload is not valid JSON' do
+      token = ['header', Base64.strict_encode64('nope'), 'sig'].join('.')
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return nil when exp field is missing' do
+      token = ['header', Base64.strict_encode64(JSON.generate({ 'aud' => 'aaaa' })), 'sig'].join('.')
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return nil when exp field is not a number' do
+      token = ['header', Base64.strict_encode64(JSON.generate({ 'exp' => 'soon' })), 'sig'].join('.')
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return nil when exp field is not a positive number' do
+      token = ['header', Base64.strict_encode64(JSON.generate({ 'exp' => 0 })), 'sig'].join('.')
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return nil when expiration year is before 2023' do
+      token = make_token(Time.utc(2022, 12, 24, 19, 00, 00))
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return nil when expiration year is after 2100' do
+      token = make_token(Time.utc(2101, 5, 5, 0, 0, 0))
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return the expiration time for a valid token' do
+      time = Time.at(Time.now.to_i + 7200)
+      token = make_token(time)
+      subject.token_expiration_date(token).should == time
+    end
+  end
+
+  describe '#access_token_expired?' do
+    let(:config) { data }
+
+    before do
+      File.write('myconfig.yml', YAML.dump(config))
+    end
+
+    context 'when there is no user config' do
+      subject { Minisky.new(host, nil) }
+
+      it 'should raise AuthError' do
+        expect { subject.access_token_expired? }.to raise_error(Minisky::AuthError)
+      end
+    end
+
+    context 'when access token is missing' do
+      let(:config) { data.merge('access_token' => nil) }
+
+      it 'should raise AuthError' do
+        expect { subject.access_token_expired? }.to raise_error(Minisky::AuthError)
+      end
+    end
+
+    context 'when token expiration cannot be decoded' do
+      let(:config) { data.merge('access_token' => 'blob') }
+
+      it 'should raise AuthError' do
+        expect { subject.access_token_expired? }.to raise_error(Minisky::AuthError)
+      end
+    end
+
+    context 'when token expiration date is in the past' do
+      let(:config) { data.merge('access_token' => make_token(Time.now - 30)) }
+
+      it 'should return true' do
+        subject.access_token_expired?.should == true
+      end
+    end
+
+    context 'when token expiration date is in less than 60 seconds' do
+      let(:config) { data.merge('access_token' => make_token(Time.now + 50)) }
+
+      it 'should return true' do
+        subject.access_token_expired?.should == true
+      end
+    end
+
+    context 'when token expiration date is in more than 60 seconds' do
+      let(:config) { data.merge('access_token' => make_token(Time.now + 180)) }
+
+      it 'should return false' do
+        subject.access_token_expired?.should == false
+      end
+    end
+  end
 end
 
 describe 'in Minisky instance' do

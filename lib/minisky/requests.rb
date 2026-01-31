@@ -304,12 +304,13 @@ class Minisky
     #   - `:logged_in` if a login using a password was performed
     #   - `:refreshed` if the access token was expired and was refreshed
     #   - `:ok` if no refresh was needed
+    #   - `:unknown` if the token is not a valid JWT (e.g. an opaque blob)
     #
     # @raise [BadResponse] if login or refresh returns an error status code
     # @raise [AuthError]
+    #   - if the client doesn't include user config at all
     #   - if logging in is required, but login or password isn't provided
     #   - if token refresh is needed, but refresh token is missing
-    #   - if a token has invalid format
 
     def check_access
       if !user
@@ -318,8 +319,16 @@ class Minisky
         raise AuthError, "User id or password is missing"
       elsif !user.logged_in?
         log_in
-        :logged_in
-      elsif access_token_expired?
+        return :logged_in
+      end
+
+      begin
+        expired = access_token_expired?
+      rescue AuthError
+        return :unknown
+      end
+
+      if expired
         perform_token_refresh
         :refreshed
       else
@@ -390,28 +399,57 @@ class Minisky
       json
     end
 
+    # Attempts to parse a given token as JWT and extract the expiration date from the payload.
+    # An access token technically isn't required to be a (valid) JWT, so if the parsing fails
+    # for whatever reason, nil is returned.
+    #
+    # @return [Time, nil] parsed expiration time, or nil if token is not a valid JWT
+
     def token_expiration_date(token)
+      return nil unless token.valid_encoding?
+
       parts = token.split('.')
-      raise AuthError, "Invalid access token format" unless parts.length == 3
+      return nil unless parts.length == 3
 
       begin
         payload = JSON.parse(Base64.decode64(parts[1]))
       rescue JSON::ParserError
-        raise AuthError, "Couldn't decode payload from access token"
+        return nil
       end
 
       exp = payload['exp']
-      raise AuthError, "Invalid token expiry data" unless exp.is_a?(Numeric) && exp > 0
+      return nil unless exp.is_a?(Numeric) && exp > 0
 
-      Time.at(exp)
+      time = Time.at(exp)
+      return nil if time.year < 2023 || time.year > 2100
+
+      time
     end
 
+    # Attempts to parse the user's access token as JWT, extract the expiration date from the
+    # payload, and check if the token hasn't expired yet.
+    #
+    # @return [Boolean] true if the token's expiration time is more than a minute away
+    # @raise [AuthError] if the token is not a valid JWT, or user is not logged in
+
     def access_token_expired?
-      token_expiration_date(user.access_token) < Time.now + 60
+      if user&.access_token.nil?
+        raise AuthError, "No access token (user is not logged in)"
+      end
+
+      exp_date = token_expiration_date(user.access_token)
+
+      if exp_date
+        exp_date < Time.now + 60
+      else
+        raise AuthError, "Token expiration date cannot be decoded"
+      end
     end
 
     #
     # Clear stored access and refresh tokens, effectively logging out the user.
+    #
+    # @raise [AuthError] if the client doesn't have a user config
     #
 
     def reset_tokens
