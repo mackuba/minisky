@@ -1,4 +1,5 @@
 require 'yaml'
+require_relative 'shared/ex_requests'
 require_relative 'shared/ex_unauthed'
 
 data = {
@@ -98,7 +99,7 @@ describe 'in Minisky instance' do
       File.write('myconfig.yml', YAML.dump(data))
     end
 
-    include_examples "Requests", 'bsky.test'
+    include_examples "authenticated requests", 'bsky.test'
   end
 
   context 'without a config' do

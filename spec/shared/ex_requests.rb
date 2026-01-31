@@ -2,7 +2,7 @@ require_relative 'ex_get_request'
 require_relative 'ex_post_request'
 require_relative 'ex_fetch_all'
 
-shared_examples "Requests" do |host|
+shared_examples "authenticated requests" do |host|
   let(:host) { host }
 
   before do

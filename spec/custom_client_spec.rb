@@ -1,4 +1,5 @@
 require 'json'
+require_relative 'shared/ex_requests'
 require_relative 'shared/ex_unauthed'
 
 class CustomJSONClient
@@ -40,7 +41,7 @@ describe "in custom client" do
       File.write('test.json', JSON.generate(data))
     end
 
-    include_examples "Requests", 'at.x.com'
+    include_examples "authenticated requests", 'at.x.com'
   end
 
   context 'if id field is nil,' do
