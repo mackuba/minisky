@@ -1,16 +1,18 @@
 ## Unreleased
 
 * don't stop fetching in `fetch_all` if an empty page is returned but the cursor is not nil; it's technically allowed for the server to return an empty page but still have more data to send
-* in `post_request`, don't set Content-Type to "application/json" if the data sent is a string or nil (it might cause an error in some cases)
+* in `post_request`, don't set Content-Type to "application/json" if the data sent is a string or nil (it might cause an error in some cases, like when uploading some binary content)
 * allow connecting to non-HTTPS servers (e.g. `http://localhost:3000`)
+* allow making unauthenticated clients with custom classes by returning `nil` from `#config`; custom clients with a config that's missing an `id` or `pass` are treated as an error
 * deprecate logging in using an email address in the `id` field – `createSession` accepts such identifier, but unlike with handle or DID, there's no way to use it to look up the DID document and PDS location if we wanted to
+* fixed URL query params in POST requests on Ruby 2.x
 * marked `Minisky#active_repl?` method as private
 
 ## [0.5.0] - 2024-12-27 🎄
 
 * `host` param in the initializer can be passed with a `https://` prefix (useful if you're passing it directly from a DID document, e.g. using DIDKit)
 * added validation of the `method` parameter in request calls: it needs to be either a proper NSID, or a full URL as a string or a URI object
-* added new optional `params` keyword argument in `post_request`, which lets you append query parameters to the URL if a POST endpoint requires passing them this way
+* added new optional `params` keyword argument in `post_request`, which lets you append query parameters to the URL if a POST endpoint requires passing them this way (e.g. `uploadVideo`)
 * `default_progress` is set by default to show progress using dots (`.`) if Minisky is loaded inside an IRB or Pry context
 * when experimenting with Minisky in the console, you can now skip the `field:` parameter to `fetch_all` if you don't remember the expected key name in the response, and the method will make a request and return an error which tells you the list of available keys
 * added `access_token_expired?` helper method
