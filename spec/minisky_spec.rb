@@ -72,6 +72,12 @@ describe Minisky do
     it 'should manage tokens by default' do
       subject.auto_manage_tokens.should == true
     end
+
+    it 'should set host and config properties' do
+      subject.host.should == host
+      subject.config.should be_a(Hash)
+      subject.config.should == data
+    end
   end
 
   context 'without a config' do
@@ -84,6 +90,62 @@ describe Minisky do
     it 'should not manage tokens' do
       subject.auto_manage_tokens.should == false
     end
+
+    it 'should set host property' do
+      subject.host.should == host
+    end
+
+    it 'should set config to nil' do
+      subject.config.should be_nil
+    end
+  end
+
+  context 'if running inside IRB' do
+    subject { Minisky.new(host, nil) }
+
+    before do
+      load File.join(__dir__, 'shared', 'fake_irb.rb')
+    end
+
+    it 'should set default_progress to "."' do
+      subject.default_progress.should == '.'
+    end
+
+    after do
+      Object.send(:remove_const, :IRB)
+    end
+  end
+
+  context 'if running inside Pry' do
+    subject { Minisky.new(host, nil) }
+
+    before do
+      load File.join(__dir__, 'shared', 'fake_pry.rb')
+    end
+
+    it 'should set default_progress to "."' do
+      subject.default_progress.should == '.'
+    end
+
+    after do
+      Object.send(:remove_const, :Pry)
+    end
+  end
+
+  context 'if not running inside a REPL' do
+    subject { Minisky.new(host, nil) }
+
+    it 'should keep default_progress unset' do
+      subject.default_progress.should be_nil
+    end
+  end
+
+  it 'should let you pass additional options and set them' do
+    File.write('myconfig.yml', YAML.dump(data))
+
+    minisky = Minisky.new(host, 'myconfig.yml', auto_manage_tokens: false, progress: '*')
+    minisky.auto_manage_tokens.should == false
+    minisky.default_progress.should == '*'
   end
 end
 

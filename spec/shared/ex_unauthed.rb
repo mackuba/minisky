@@ -1,7 +1,15 @@
 shared_examples "unauthenticated user" do
+  let(:host) { subject.host }
+
   describe '#log_in' do
     it 'should raise AuthError' do
       expect { subject.log_in }.to raise_error(Minisky::AuthError)
+    end
+  end
+
+  describe '#perform_token_refresh' do
+    it 'should raise AuthError' do
+      expect { subject.perform_token_refresh }.to raise_error(Minisky::AuthError)
     end
   end
 
@@ -11,14 +19,13 @@ shared_examples "unauthenticated user" do
     end
   end
 
-  context 'with sending auth headers turned off' do
-    before do
-      subject.send_auth_headers = false
-      subject.auto_manage_tokens = false
+  context '#user' do
+    it 'should return nil' do
+      subject.user.should be_nil
     end
+  end
 
-    let(:host) { subject.host }
-
+  context 'with auth headers off' do
     describe '#get_request' do
       it 'should not raise errors' do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.getTrends").to_return_json(body: { result: 123 })
@@ -51,6 +58,55 @@ shared_examples "unauthenticated user" do
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.listRepos").once
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.listRepos?cursor=x123").once
+      end
+    end
+  end
+
+  context 'with sending auth headers turned on' do
+    before do
+      subject.send_auth_headers = true
+    end
+
+    describe '#get_request' do
+      it 'should raise an error' do
+        expect { subject.get_request('com.example.service.getTrends') }.to raise_error(Minisky::AuthError)
+      end
+    end
+
+    describe '#post_request' do
+      it 'should not raise errors' do
+        expect { subject.post_request('com.example.service.createApp') }.to raise_error(Minisky::AuthError)
+      end
+    end
+
+    describe '#fetch_all' do
+      it 'should not raise errors' do
+        expect { subject.fetch_all('com.example.service.listRepos', field: 'repos') }.to raise_error(Minisky::AuthError)
+      end
+    end
+  end
+
+  context 'with sending auth headers & auto manage tokens turned on' do
+    before do
+      subject.send_auth_headers = true
+      subject.auto_manage_tokens = true
+    end
+
+    describe '#get_request' do
+      it 'should raise an error' do
+        expect { subject.get_request('com.example.service.getTrends') }.to raise_error(Minisky::AuthError)
+      end
+    end
+
+    describe '#post_request' do
+      it 'should not raise errors' do
+        expect { subject.post_request('com.example.service.createApp') }.to raise_error(Minisky::AuthError)
+      end
+    end
+
+    describe '#fetch_all' do
+      it 'should not raise errors' do
+        expect { subject.fetch_all('com.example.service.listRepos', field: 'repos') }.to raise_error(Minisky::AuthError)
       end
     end
   end

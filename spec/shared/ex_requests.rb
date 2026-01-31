@@ -9,12 +9,6 @@ shared_examples "authenticated requests" do |host|
     subject.auto_manage_tokens = false
   end
 
-  it 'should load config from a file' do
-    subject.user.id.should == 'john.foo'
-    subject.user.access_token.should == 'aatoken'
-    subject.user.refresh_token.should == 'rrtoken'
-  end
-
   it 'should have a user object wrapping the config' do
     subject.config['something'] = 'some value'
 
