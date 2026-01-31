@@ -13,6 +13,10 @@ class Minisky
       @config = config
     end
 
+    def has_credentials?
+      !!(id && pass)
+    end
+
     def logged_in?
       !!(access_token && refresh_token)
     end
@@ -49,7 +53,8 @@ class Minisky
     attr_writer :send_auth_headers
     attr_writer :auto_manage_tokens
 
-    # Tells whether to set authentication headers automatically (default: true).
+    # Tells whether to set authentication headers automatically (default: true if there
+    # is a user config).
     #
     # If false, you will need to pass `auth: 'sometoken'` explicitly to requests that
     # require authentication.
@@ -57,11 +62,11 @@ class Minisky
     # @return [Boolean] whether to set authentication headers in requests
     #
     def send_auth_headers
-      instance_variable_defined?('@send_auth_headers') ? @send_auth_headers : true
+      instance_variable_defined?('@send_auth_headers') ? @send_auth_headers : (config != nil)
     end
 
     # Tells whether the library should manage the access & refresh tokens automatically
-    # for you (default: true).
+    # for you (default: true if there is a user config).
     #
     # If true, {#check_access} is called before each request to make sure that there is a
     # fresh access token available; if false, you will need to call {#log_in} and
@@ -70,7 +75,7 @@ class Minisky
     # @return [Boolean] whether to automatically manage access tokens
     #
     def auto_manage_tokens
-      instance_variable_defined?('@auto_manage_tokens') ? @auto_manage_tokens : true
+      instance_variable_defined?('@auto_manage_tokens') ? @auto_manage_tokens : (config != nil)
     end
 
     alias progress default_progress
@@ -85,7 +90,7 @@ class Minisky
     end
 
     def user
-      @user ||= User.new(config)
+      @user ||= config && User.new(config)
     end
 
     # Sends a GET request to the service's API.
@@ -307,7 +312,11 @@ class Minisky
     #   - if a token has invalid format
 
     def check_access
-      if !user.logged_in?
+      if !user
+        raise AuthError, "User config is missing"
+      elsif !user.has_credentials?
+        raise AuthError, "User id or password is missing"
+      elsif !user.logged_in?
         log_in
         :logged_in
       elsif access_token_expired?
@@ -332,7 +341,7 @@ class Minisky
     # @raise [BadResponse] if the server responds with an error status code
 
     def log_in
-      if user.id.nil? || user.pass.nil?
+      if user.nil? || !user.has_credentials?
         raise AuthError, "To log in, please provide a user id and password"
       end
 
@@ -368,7 +377,7 @@ class Minisky
     # @raise [BadResponse] if the server responds with an error status code
 
     def perform_token_refresh
-      if user.refresh_token.nil?
+      if user&.refresh_token.nil?
         raise AuthError, "Can't refresh access token - refresh token is missing"
       end
 
@@ -406,6 +415,10 @@ class Minisky
     #
 
     def reset_tokens
+      if !user
+        raise AuthError, "User config is missing"
+      end
+
       user.access_token = nil
       user.refresh_token = nil
       save_config
@@ -447,7 +460,7 @@ class Minisky
       if auth.is_a?(String)
         { 'Authorization' => "Bearer #{auth}" }
       elsif auth
-        if user.access_token
+        if user&.access_token
           { 'Authorization' => "Bearer #{user.access_token}" }
         else
           raise AuthError, "Can't send auth headers, access token is missing"

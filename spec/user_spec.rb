@@ -37,4 +37,20 @@ describe Minisky::User do
       subject.logged_in?.should be true
     end
   end
+
+  context '#has_credentials?' do
+    it 'should return false if id is missing' do
+      subject.instance_variable_get('@config')['id'] = nil
+      subject.has_credentials?.should be false
+    end
+
+    it 'should return false if pass is missing' do
+      subject.instance_variable_get('@config')['pass'] = nil
+      subject.has_credentials?.should be false
+    end
+
+    it 'should return true if both id and pass are set' do
+      subject.has_credentials?.should be true
+    end
+  end
 end

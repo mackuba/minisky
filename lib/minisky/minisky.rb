@@ -53,9 +53,7 @@ class Minisky
         raise AuthError, "Missing user id or password in the config file #{@config_file}"
       end
     else
-      @config = {}
-      @send_auth_headers = false
-      @auto_manage_tokens = false
+      @config = nil
     end
 
     if active_repl?
