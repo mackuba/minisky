@@ -38,3 +38,10 @@ module SimpleCov
     end
   end
 end
+
+INVALID_METHOD_NAMES = [
+  'getUsers',
+  '127.0.0.1',
+  '/xrpc/com.atproto.repo.getRecords',
+  'app.bsky.feed.under_score'
+]

@@ -36,6 +36,14 @@ shared_examples "get_request" do
       end
     end
 
+    context 'with empty params' do
+      it 'should not append anything to the URL' do
+        subject.get_request('com.example.service.getStuff', {})
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
+      end
+    end
+
     context 'with an array passed as param' do
       it 'should append one copy of the param for each item' do
         subject.get_request('com.example.service.getStuff', { profiles: ['john.foo', 'spam.zip'], reposts: true })
@@ -51,6 +59,14 @@ shared_examples "get_request" do
 
         WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff?user=alf.gov").once
          .with(headers: { 'Food' => 'cats' })
+      end
+    end
+
+    context 'with an invalid method name' do
+      it 'should raise an ArgumentError' do
+        INVALID_METHOD_NAMES.each do |m|
+          expect { subject.get_request(m) }.to raise_error(ArgumentError)
+        end
       end
     end
 
