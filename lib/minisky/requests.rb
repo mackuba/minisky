@@ -341,6 +341,11 @@ class Minisky
         password: user.pass
       }
 
+      if user.id =~ /\A[^@]+@[^@]+\z/
+        STDERR.puts "Warning: logging in using an email address is deprecated in Minisky and will be " +
+          "removed in a future version. Use either a handle or a DID instead."
+      end
+
       json = post_request('com.atproto.server.createSession', data, auth: false)
 
       user.did = json['did']
