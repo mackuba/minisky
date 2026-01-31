@@ -2,14 +2,14 @@ shared_examples "fetch_all" do
   describe '#fetch_all' do
     context 'when one page of items is returned' do
       before do
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return_json(body: { "items": ["one", "two", "three"] })
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "items": ["one", "two", "three"] }
+        ])
       end
 
       it 'should make one request to the given endpoint' do
         subject.fetch_all('com.example.service.fetchAll', field: 'items')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+        verify_fetch_all
       end
 
       it 'should return the parsed items' do
@@ -20,18 +20,15 @@ shared_examples "fetch_all" do
 
     context 'when more than one page of items is returned' do
       before do
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "ccc111" })
-
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc111")
-          .to_return_json(body: { "items": ["four", "five"] })
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "items": ["one", "two", "three"] },
+          { "items": ["four", "five"] },
+        ])
       end
 
       it 'should make multiple requests, passing the last cursor' do
         subject.fetch_all('com.example.service.fetchAll', field: 'items')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc111").once
+        verify_fetch_all
       end
 
       it 'should return all the parsed items collected from the responses' do
@@ -42,37 +39,29 @@ shared_examples "fetch_all" do
 
     context 'when params are passed' do
       before do
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?type=post")
-          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "ccc222" })
-
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?type=post&cursor=ccc222")
-          .to_return_json(body: { "items": ["four", "five"] })
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll?type=post", [
+          { "items": ["one", "two", "three"] },
+          { "items": ["four", "five"] },
+        ])
       end
 
       it 'should add the params to the url' do
         subject.fetch_all('com.example.service.fetchAll', { type: 'post' }, field: 'items')
-
-        WebMock.should have_requested(:get,
-          "https://#{host}/xrpc/com.example.service.fetchAll?type=post").once
-        WebMock.should have_requested(:get,
-          "https://#{host}/xrpc/com.example.service.fetchAll?type=post&cursor=ccc222").once
+        verify_fetch_all
       end
     end
 
     context 'when params are an explicit nil' do
       before do
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "ccc222" })
-
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc222")
-          .to_return_json(body: { "items": ["four", "five"] })
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "items": ["one", "two", "three"] },
+          { "items": ["four", "five"] },
+        ])
       end
 
       it 'should not add anything to the url' do
         subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
-
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc222").once
+        verify_fetch_all
       end
     end
 
@@ -97,22 +86,19 @@ shared_examples "fetch_all" do
 
     context 'when break condition is passed' do
       before do
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
-          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "page1" })
-
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1")
-          .to_return_json(body: { "items": ["four", "five"], "cursor": "page2" })
-
-        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2")
-          .to_return_json(body: { "items": ["six"] })
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "items": ["one", "two", "three"] },
+          { "items": ["four", "five"] },
+          { "items": ["six"] },
+        ])
       end
 
       it 'should stop when a matching item is found' do
         subject.fetch_all('com.example.service.fetchAll', field: 'items', break_when: ->(x) { x =~ /u/ })
 
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
-        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page1").once
-        WebMock.should_not have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=page2")
+        WebMock.should have_requested(:get, @stubbed_urls[0]).once
+        WebMock.should have_requested(:get, @stubbed_urls[1]).once
+        WebMock.should_not have_requested(:get, @stubbed_urls[2])
       end
 
       it 'should filter out matching items from the response' do
