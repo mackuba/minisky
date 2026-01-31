@@ -1,11 +1,13 @@
 require_relative 'ex_authorization'
+require_relative 'ex_bad_response'
 
 shared_examples "get_request" do
   describe '#get_request' do
     before do
-      stub_request(:get, %r(https://#{host}/xrpc/com.example.service.getStuff(\?.*)?))
-        .to_return_json(body: { "result": 123 })
+      stub_request(:get, %r(https://#{host}/xrpc/com.example.service.getStuff(\?.*)?)).to_return(response)
     end
+
+    let(:response) {{ body: JSON.generate({ "result": 123 }), headers: { content_type: 'application/json' }}}
 
     it 'should make a request to the given XRPC endpoint' do
       subject.get_request('com.example.service.getStuff')
@@ -69,6 +71,8 @@ shared_examples "get_request" do
         end
       end
     end
+
+    include_examples "bad response handling", :get, 'com.example.service.getStuff'
 
     include_examples "authorization",
       request: ->(subject, params) { subject.get_request('com.example.service.getStuff', **params) },

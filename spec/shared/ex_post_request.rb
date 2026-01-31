@@ -1,4 +1,5 @@
 require_relative 'ex_authorization'
+require_relative 'ex_bad_response'
 
 shared_examples "post_request" do
   describe '#post_request' do
@@ -234,6 +235,8 @@ shared_examples "post_request" do
         subject.post_request('com.example.service.doStuff').should == 'ok'
       end
     end
+
+    include_examples "bad response handling", :post, 'com.example.service.doStuff'
 
     include_examples "authorization",
       request: ->(subject, params) { subject.post_request('com.example.service.doStuff', **params) },
