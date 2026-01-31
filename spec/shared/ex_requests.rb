@@ -143,6 +143,14 @@ shared_examples "authenticated requests" do |host|
       config['access_token'].should be_nil
       config['refresh_token'].should be_nil
     end
+
+    context 'if tokens are already nil' do
+      it 'should not raise error' do
+        subject.reset_tokens
+
+        expect { subject.reset_tokens }.not_to raise_error
+      end
+    end
   end
 
   include_examples "get_request"

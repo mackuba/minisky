@@ -19,6 +19,12 @@ shared_examples "unauthenticated user" do
     end
   end
 
+  describe '#reset_tokens' do
+    it 'should raise AuthError' do
+      expect { subject.reset_tokens }.to raise_error(Minisky::AuthError)
+    end
+  end
+
   context '#user' do
     it 'should return nil' do
       subject.user.should be_nil

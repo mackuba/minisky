@@ -216,26 +216,6 @@ shared_examples "post_request" do
       end
     end
 
-    context 'if the response has a 4xx status' do
-      let(:response) {{ body: '{ "error": "message" }', status: 403, headers: { 'Content-Type': 'application/json' }}}
-
-      it 'should raise an error' do
-        expect { subject.post_request('com.example.service.doStuff') }.to raise_error(Minisky::ClientErrorResponse)
-      end
-    end
-
-    context 'if the response has a 2xx status, but the response is not json' do
-      let(:response) {{ body: 'ok', status: 201, headers: { 'Content-Type': 'text/plain' }}}
-
-      it 'should not raise an error' do
-        expect { subject.post_request('com.example.service.doStuff') }.to_not raise_error
-      end
-
-      it 'should return the body as a string' do
-        subject.post_request('com.example.service.doStuff').should == 'ok'
-      end
-    end
-
     include_examples "bad response handling", :post, 'com.example.service.doStuff'
 
     include_examples "authorization",

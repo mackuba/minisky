@@ -74,7 +74,7 @@ shared_examples "bad response handling" do |method, endpoint|
       end
     end
 
-    context 'if the response is not json' do
+    context 'if the bad response is not json' do
       let(:response) {{
         body: '<html>wtf</html>',
         status: 503
@@ -88,6 +88,19 @@ shared_examples "bad response handling" do |method, endpoint|
           err.error_type.should be_nil
           err.error_message.should be_nil
         }
+      end
+    end
+
+    context 'if the response is not json, but has a 2xx status' do
+      let(:response) {{ body: 'ok', status: 201, headers: { 'Content-Type': 'text/plain' }}}
+
+      it 'should not raise an error' do
+        expect { make_request }.to_not raise_error
+      end
+
+      it 'should return the body as a string' do
+        result = make_request
+        result.should == 'ok'
       end
     end
   end

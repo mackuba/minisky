@@ -205,6 +205,59 @@ shared_examples "fetch_all" do
       end
     end
 
+    context 'when an empty page is received, but with a cursor' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "feed": ["one", "two", "three"] },
+          { "feed": [] },
+          { "feed": ["six"] },
+        ])
+      end
+
+      it 'should continue fetching until the cursor is nil' do
+        result = subject.fetch_all('com.example.service.fetchAll', field: 'feed')
+        result.should == ['one', 'two', 'three', 'six']
+      end
+    end
+
+    context 'when field is not passed' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "thingies": ["one", "two", "three"], "best": "two", "foobars": ["foo", "bar"], "total": 6 },
+          { "items": ["four", "five"] },
+        ])
+      end
+
+      it 'should make one request and raise an error with list of array fields' do
+        expect { subject.fetch_all('com.example.service.fetchAll') }.to raise_error { |err|
+          err.should be_a(Minisky::FieldNotSetError)
+          err.fields.should == ['thingies', 'foobars']
+        }
+
+        WebMock.should have_requested(:get, @stubbed_urls[0]).once
+        WebMock.should_not have_requested(:get, @stubbed_urls[1])        
+      end
+    end
+
+    context 'when field is nil' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "thingies": ["one", "two", "three"], "best": "two", "foobars": ["foo", "bar"], "total": 6 },
+          { "items": ["four", "five"] },
+        ])
+      end
+
+      it 'should make one request and raise an error with list of array fields' do
+        expect { subject.fetch_all('com.example.service.fetchAll', field: nil) }.to raise_error { |err|
+          err.should be_a(Minisky::FieldNotSetError)
+          err.fields.should == ['thingies', 'foobars']
+        }
+
+        WebMock.should have_requested(:get, @stubbed_urls[0]).once
+        WebMock.should_not have_requested(:get, @stubbed_urls[1])        
+      end
+    end
+
     describe 'progress param' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
