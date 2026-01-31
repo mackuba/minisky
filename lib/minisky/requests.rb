@@ -183,7 +183,7 @@ class Minisky
         body = data.to_s
       else
         body = data.to_json
-        headers["Content-Type"] = "application/json" unless headers.keys.map(&:downcase).include?('content-type')
+        headers["Content-Type"] = "application/json" unless headers.keys.any? { |k| k.to_s.downcase == 'content-type' }
       end
 
       url = build_request_uri(method)
