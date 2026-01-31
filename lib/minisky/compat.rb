@@ -12,9 +12,9 @@ class Minisky
       super(method, params, auth: auth, headers: headers)
     end
 
-    def post_request(method, params = nil, auth: default_auth_mode, headers: nil, **kwargs)
-      params ||= kwargs unless kwargs.empty?
-      super(method, params, auth: auth, headers: headers)
+    def post_request(method, data = nil, auth: default_auth_mode, headers: nil, params: nil, **kwargs)
+      data ||= kwargs unless kwargs.empty?
+      super(method, data, auth: auth, headers: headers, params: params)
     end
   end
 end
