@@ -173,12 +173,12 @@ class Minisky
       check_access if auto_manage_tokens && auth == true
 
       headers = authentication_header(auth).merge(headers || {})
-      headers["Content-Type"] = "application/json" unless headers.keys.any? { |k| k.to_s.downcase == 'content-type' }
 
-      body = if data.is_a?(String) || data.nil?
-        data.to_s
+      if data.is_a?(String) || data.nil?
+        body = data.to_s
       else
-        data.to_json
+        body = data.to_json
+        headers["Content-Type"] = "application/json" unless headers.keys.map(&:downcase).include?('content-type')
       end
 
       url = build_request_uri(method)

@@ -20,11 +20,11 @@ shared_examples "post_request" do
       result.should == { 'result' => 'ok' }
     end
 
-    it 'should set content type to application/json' do
+    it 'should not set content type' do
       subject.post_request('com.example.service.doStuff')
 
       WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
-        .with(headers: { 'Content-Type' => 'application/json' })
+        .with { |req| req.headers.all? { |k, v| k.downcase != 'content-type' }}
     end
 
     context 'if params are passed' do
@@ -34,6 +34,14 @@ shared_examples "post_request" do
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
           .with(body: JSON.generate(data))
+      end
+
+      it 'should set content type to application/json' do
+        data = { repo: 'kate.dev', limit: 40, fields: ['name', 'posts'] }
+        subject.post_request('com.example.service.doStuff', data)
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(headers: { 'Content-Type': 'application/json' })
       end
     end
 
@@ -72,11 +80,11 @@ shared_examples "post_request" do
           .with(body: 'blob', headers: { 'Blob-Type': 'blobby' })
       end
 
-      it 'should set content type to application/json' do
+      it 'should not add content type' do
         subject.post_request('com.example.service.doStuff', 'blob', headers: { 'Blob-Type': 'blobby' })
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
-          .with(body: 'blob', headers: { 'Content-Type': 'application/json' })
+          .with { |req| req.headers.all? { |k, v| k.downcase != 'content-type' }}
       end
     end
 
