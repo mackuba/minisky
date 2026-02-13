@@ -285,7 +285,10 @@ class Minisky
         params[:cursor] = cursor
         pages += 1
 
-        break if !cursor || pages == max_pages
+        # TODO: don't break if records.empty? but cursor != nil
+        # but currently this causes problems with some Bluesky endpoints like getBookmarks
+
+        break if !cursor || records.empty? || pages == max_pages
         break if break_when && records.any? { |x| break_when.call(x) }
       end
 

@@ -2,7 +2,6 @@
 
 The "really niche bugfix" edition:
 
-* don't stop fetching in `fetch_all` if an empty page is returned but the cursor is not nil; it's technically allowed for the server to return an empty page but still have more data to send
 * in `post_request`, don't set Content-Type to "application/json" if the data sent is a string or nil (it might cause an error in some cases, like when uploading some binary content)
 * handle the (somewhat theoretical but possible) case where an access token is not a JWT but just some opaque blob – in that case, Minisky will now not throw an error trying to parse it, but just treat it as "unknown" and will not try to refresh it
   - note: at the moment Minisky will not catch the "token expired" error and refresh the token automatically in such scenario
