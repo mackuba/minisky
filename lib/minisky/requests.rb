@@ -50,6 +50,16 @@ class Minisky
     #
     attr_accessor :default_progress
 
+    # By default, when `fetch_all` receives a response with an empty page with no records but
+    # which includes a cursor for the next page, it keeps fetching until it receives a response
+    # with null cursor. This is more technically correct, but can cause problems with some
+    # non-compliant APIs, so you can set this option to stop fetching when an empty page
+    # is received.
+    #
+    # @return [Boolean]
+    #
+    attr_accessor :stop_fetch_on_empty_page
+
     attr_writer :send_auth_headers
     attr_writer :auto_manage_tokens
 
@@ -285,10 +295,7 @@ class Minisky
         params[:cursor] = cursor
         pages += 1
 
-        # TODO: don't break if records.empty? but cursor != nil
-        # but currently this causes problems with some Bluesky endpoints like getBookmarks
-
-        break if !cursor || records.empty? || pages == max_pages
+        break if !cursor || pages == max_pages || (stop_fetch_on_empty_page && records.empty?)
         break if break_when && records.any? { |x| break_when.call(x) }
       end
 

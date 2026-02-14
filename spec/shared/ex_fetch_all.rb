@@ -218,6 +218,21 @@ shared_examples "fetch_all" do
         result = subject.fetch_all('com.example.service.fetchAll', field: 'feed')
         result.should == ['one', 'two', 'three', 'six']
       end
+
+      context 'with stop_fetch_on_empty_page option set to true' do
+        before do
+          subject.stop_fetch_on_empty_page = true
+        end
+
+        it 'should stop at the first empty page' do
+          result = subject.fetch_all('com.example.service.fetchAll', field: 'feed')
+          result.should == ['one', 'two', 'three']
+
+          WebMock.should have_requested(:get, @stubbed_urls[0]).once
+          WebMock.should have_requested(:get, @stubbed_urls[1]).once
+          WebMock.should_not have_requested(:get, @stubbed_urls[2])
+        end
+      end
     end
 
     context 'when field is not passed' do
