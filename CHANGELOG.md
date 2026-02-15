@@ -1,4 +1,4 @@
-## Unreleased
+## [0.5.1] - 2026-02-15
 
 The "really niche bugfix" edition:
 
@@ -13,7 +13,7 @@ The "really niche bugfix" edition:
 * fixed URL query params in POST requests on Ruby 2.x
 * marked `Minisky#active_repl?` method as private
 
-Also added YARD API documentation for most of the code.
+Also added [YARD API documentation](https://rubydoc.info/gems/minisky/) for most of the code.
 
 ## [0.5.0] - 2024-12-27 🎄
 
