@@ -62,6 +62,13 @@ class Minisky
     #
     attr_accessor :stop_fetch_on_empty_page
 
+    # If set, the `open_timeout` and `read_timeout` parameters will be set to this value
+    # on network requests.
+    #
+    # @return [Numeric, nil]
+    #
+    attr_accessor :timeout
+
     attr_writer :send_auth_headers
     attr_writer :auto_manage_tokens
 
@@ -484,8 +491,16 @@ class Minisky
     private
 
     def make_request(request)
-      # this long form is needed because #get_response only supports a headers param in Ruby 3.x
-      response = Net::HTTP.start(request.uri.hostname, request.uri.port, use_ssl: (request.uri.scheme == 'https')) do |http|
+      options = {
+        use_ssl: (request.uri.scheme == 'https')
+      }
+
+      if @timeout
+        options[:open_timeout] = @timeout
+        options[:read_timeout] = @timeout
+      end
+
+      response = Net::HTTP.start(request.uri.hostname, request.uri.port, options) do |http|
         http.request(request)
       end
     end
