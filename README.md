@@ -135,8 +135,6 @@ This will output a line like this:
 .................
 ```
 
-You can find more examples on the [examples page](https://ruby.sdk.blue/examples/) on [ruby.sdk.blue](https://ruby.sdk.blue).
-
 
 ## Customization
 
@@ -188,6 +186,13 @@ The class needs to provide:
 - a `host` method or property that returns the hostname of the server
 - a `config` property which returns a hash or a hash-like object with the configuration and user data – it needs to support reading and writing arbitrary key-value pairs with string keys
 - a `save_config` method which persists the config object to the chosen storage
+
+
+## Other resources
+
+- [YARD API documentation](https://rubydoc.info/gems/minisky) at rubydoc.info
+- [ruby.sdk.blue](https://ruby.sdk.blue)
+- [Example scripts](https://ruby.sdk.blue/examples/)
 
 
 ## Credits
