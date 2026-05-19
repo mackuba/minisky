@@ -1,8 +1,6 @@
 # Minisky 🌤
 
-[![Build Status](https://github.com/mackuba/minisky/actions/workflows/main.yml/badge.svg)](https://github.com/mackuba/minisky/actions/workflows/main.yml)
-[![Gem Version](https://badge.fury.io/rb/minisky.svg?icon=si%3Arubygems&icon_color=%23ff6251)](https://rubygems.org/gems/minisky)
-[![YARD Docs](http://img.shields.io/badge/yard-docs-blue.svg)](https://rubydoc.info/gems/minisky)
+[![Gem Version](https://badge.fury.io/rb/minisky.svg?icon=si%3Arubygems&icon_color=%23ff6251)](https://rubygems.org/gems/minisky) [![YARD Docs](http://img.shields.io/badge/yard-docs-blue.svg)](https://rubydoc.info/gems/minisky)
 
 Minisky is a minimal client of the Bluesky (ATProto) API. It provides a simple API client class that you can use to log in to the Bluesky API and make any GET and POST requests there. It's meant to be an easy way to start playing and experimenting with the AT Protocol API.
 
