@@ -2,7 +2,7 @@
 
 Minisky is a minimal client of the Bluesky (ATProto) API. It provides a simple API client class that you can use to log in to the Bluesky API and make any GET and POST requests there. It's meant to be an easy way to start playing and experimenting with the AT Protocol API.
 
-This is designed as a low-level XRPC client library - it purposefully does not include any convenience methods like "get posts" or "get profile" etc., it only provides base components that you could use to build a higher level API.
+This is designed as a low-level XRPC client library – it purposefully does not include any convenience methods like "get posts" or "get profile" etc., it only provides base components that you could use to build a higher level API.
 
 > [!NOTE]
 > Part of ATProto Ruby SDK: [ruby.sdk.blue](https://ruby.sdk.blue)
@@ -66,7 +66,7 @@ pass: very-secret-password
 The `id` can be either your handle, or your DID, or the email you've used to sign up. It's recommended that you use the "app password" that you can create in the settings instead of your main account password.
 
 > [!NOTE]
-> Bluesky has recently implemented OAuth, but Minisky doesn't support it yet - it will be added in a future version. App passwords should still be supported for a fairly long time.
+> Bluesky has recently implemented OAuth, but Minisky doesn't support it yet – it will be added in a future version. App passwords should still be supported for a fairly long time.
 
 After you log in, this file will also be used to store your access & request tokens and DID. The data in the config file can be accessed through a `user` wrapper property that exposes them as methods, e.g. the password is available as `user.pass` and the DID as `user.did`.
 
@@ -78,7 +78,7 @@ require 'minisky'
 bsky = Minisky.new('bsky.social', 'bluesky.yml')
 ```
 
-Minisky automatically manages your access and refresh tokens - it will first log you in using the login & password, and then use the refresh token to update the access token before the request when it expires.
+Minisky automatically manages your access and refresh tokens – it will first log you in using the login & password, and then use the refresh token to update the access token before the request when it expires.
 
 
 ### Making requests
@@ -142,13 +142,13 @@ You can find more examples on the [examples page](https://ruby.sdk.blue/examples
 
 The `Minisky` client currently supports such configuration options:
 
-- `default_progress` - a progress character to automatically use for `#fetch_all` calls (default: `.` when in an interactive console, `nil` otherwise)
-- `send_auth_headers` - whether auth headers should be added by default (default: `true` in authenticated mode)
-- `auto_manage_tokens` - whether access tokens should be generated and refreshed automatically when needed (default: `true` in authenticated mode)
+- `default_progress` – a progress character to automatically use for `#fetch_all` calls (default: `.` when in an interactive console, `nil` otherwise)
+- `send_auth_headers` – whether auth headers should be added by default (default: `true` in authenticated mode)
+- `auto_manage_tokens` – whether access tokens should be generated and refreshed automatically when needed (default: `true` in authenticated mode)
 
 In authenticated mode, you can disable the `send_auth_headers` option and then explicitly add `auth: true` to specific requests to include a header there.
 
-You can also disable the `auto_manage_tokens` option - in this case you will need to call the `#check_access` method before a request to refresh a token if needed, or alternatively, call either `#login` or `#perform_token_refresh`.
+You can also disable the `auto_manage_tokens` option – in this case you will need to call the `#check_access` method before a request to refresh a token if needed, or alternatively, call either `#login` or `#perform_token_refresh`.
 
 
 ### Using your own class
@@ -186,7 +186,7 @@ bsky.get_request(...)
 The class needs to provide:
 
 - a `host` method or property that returns the hostname of the server
-- a `config` property which returns a hash or a hash-like object with the configuration and user data - it needs to support reading and writing arbitrary key-value pairs with string keys
+- a `config` property which returns a hash or a hash-like object with the configuration and user data – it needs to support reading and writing arbitrary key-value pairs with string keys
 - a `save_config` method which persists the config object to the chosen storage
 
 
