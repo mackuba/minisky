@@ -1,7 +1,7 @@
 require 'json'
+require_relative 'shared/ex_authed_user'
 require_relative 'shared/ex_incomplete_auth'
-require_relative 'shared/ex_requests'
-require_relative 'shared/ex_unauthed'
+require_relative 'shared/ex_unauthed_user'
 
 class CustomJSONClient
   CONFIG_FILE = 'test.json'
@@ -55,7 +55,7 @@ describe "in custom client" do
     end
 
     describe '(requests)' do
-      include_examples "authenticated requests", 'at.x.com'
+      include_examples "authenticated user", 'at.x.com'
     end
   end
 

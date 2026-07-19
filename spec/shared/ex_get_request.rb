@@ -1,4 +1,4 @@
-require_relative 'ex_authorization'
+require_relative 'ex_requests_with_auth'
 require_relative 'ex_bad_response'
 
 shared_examples "get_request" do
@@ -74,7 +74,7 @@ shared_examples "get_request" do
 
     include_examples "bad response handling", :get, 'com.example.service.getStuff'
 
-    include_examples "authorization",
+    include_examples "requests with authentication",
       request: ->(subject, params) { subject.get_request('com.example.service.getStuff', **params) },
       expected: ->(host) { [:get, "https://#{host}/xrpc/com.example.service.getStuff"] }
   end

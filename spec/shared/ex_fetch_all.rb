@@ -1,3 +1,5 @@
+require_relative 'ex_requests_with_auth'
+
 shared_examples "fetch_all" do
   describe '#fetch_all' do
     context 'when one page of items is returned' do
@@ -74,7 +76,7 @@ shared_examples "fetch_all" do
           .to_return_json(body: { "items": ["four", "five"] })
       end
 
-      include_examples "authorization",
+      include_examples "requests with authentication",
         request: ->(subject, params) {
           subject.fetch_all('com.example.service.fetchAll', field: 'items', **params)
         },

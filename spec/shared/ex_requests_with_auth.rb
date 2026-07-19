@@ -1,4 +1,4 @@
-shared_examples 'authorization' do |request:, expected:|
+shared_examples 'requests with authentication' do |request:, expected:|
   let(:request) { request }
   let(:expected) { expected }
 
