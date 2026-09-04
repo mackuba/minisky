@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
     "changelog_uri"     => "https://tangled.org/mackuba.eu/minisky/blob/master/CHANGELOG.md",
     "source_code_uri"   => "https://tangled.org/mackuba.eu/minisky",
     "documentation_uri" => "https://rubydoc.info/gems/minisky",
+    "rubygems_mfa_required" => "true"
   }
 
   spec.files = Dir.chdir(__dir__) do
