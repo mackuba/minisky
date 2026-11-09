@@ -355,6 +355,87 @@ shared_examples "fetch_all" do |include_auth_tests:|
       end
     end
 
+    context 'when a response object is not a hash' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "thingies": ["one", "two", "three"], "best": "two", "foobars": ["foo", "bar"], "total": 6 },
+          ["four", "five"],
+        ])
+      end
+
+      it 'should raise an error' do
+        expect { subject.fetch_all('com.example.service.fetchAll', field: 'thingies') }.to raise_error(
+          Minisky::InvalidJSONError, /Received response is not in expected JSON format/
+        )
+
+        verify_fetch_all
+      end
+    end
+
+    context 'when a response object does not contain the expected records field' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "thingies": ["one", "two", "three"], "best": "two", "foobars": ["foo", "bar"], "total": 6 },
+          { "items": ["four", "five"] },
+        ])
+      end
+
+      it 'should raise an error' do
+        expect { subject.fetch_all('com.example.service.fetchAll', field: 'thingies') }.to raise_error(
+          Minisky::InvalidJSONError, /No such field in the response JSON: 'thingies'/
+        )
+
+        verify_fetch_all
+      end
+    end
+
+    context 'when the expected records field has nil value' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "thingies": ["one", "two", "three"], "best": "two", "foobars": ["foo", "bar"], "total": 6 },
+          { "thingies": nil, "items": ["four", "five"] },
+        ])
+      end
+
+      it 'should raise an error' do
+        expect { subject.fetch_all('com.example.service.fetchAll', field: 'thingies') }.to raise_error(
+          Minisky::InvalidJSONError, /Field 'thingies' is nil in the received response/
+        )
+
+        verify_fetch_all
+      end
+    end
+
+    context 'when the expected records field is not an array' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "thingies": ["one", "two", "three"], "best": "two", "foobars": ["foo", "bar"], "total": 6 },
+          { "thingies": { "items": ["four", "five"] }},
+        ])
+      end
+
+      it 'should raise an error' do
+        expect { subject.fetch_all('com.example.service.fetchAll', field: 'thingies') }.to raise_error(
+          Minisky::InvalidJSONError, /Invalid 'thingies': expected Array, got Hash/
+        )
+
+        verify_fetch_all
+      end
+    end
+
+    context 'when field is nil and the response is not a hash' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return(body: "string response", headers: { 'Content-Type' => 'text/plain' })
+      end
+
+      it 'should raise a InvalidJSONError error' do
+        expect { subject.fetch_all('com.example.service.fetchAll', field: nil) }.to raise_error(
+          Minisky::InvalidJSONError, /Received response is not in expected JSON format/
+        )
+      end
+    end
+
     describe 'progress param' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")

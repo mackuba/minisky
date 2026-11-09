@@ -295,10 +295,7 @@ class Minisky
         print(progress) if progress
 
         response = get_request(method, params, auth: auth, headers: headers)
-
-        if field.nil?
-          raise FieldNotSetError, response.keys.select { |f| response[f].is_a?(Array) }
-        end
+        validate_fetch_all_response(response, field)
 
         records = response[field]
         cursor = response['cursor']
@@ -535,6 +532,26 @@ class Minisky
         end
       else
         {}
+      end
+    end
+
+    def validate_fetch_all_response(response, field)
+      if !response.is_a?(Hash)
+        raise InvalidJSONError, "Received response is not in expected JSON format"
+      end
+
+      if field.nil?
+        raise FieldNotSetError, response.keys.select { |f| response[f].is_a?(Array) }
+      end
+
+      if !response.has_key?(field)
+        raise InvalidJSONError, "No such field in the response JSON: '#{field}'"
+      elsif response[field].nil?
+        raise InvalidJSONError, "Field '#{field}' is nil in the received response"
+      elsif !response[field].is_a?(Array)
+        raise InvalidJSONError, "Invalid '#{field}': expected Array, got #{response[field].class}"
+      else
+        # ok
       end
     end
 

@@ -121,4 +121,10 @@ class Minisky
       super("Field parameter not provided; available fields: #{@fields.inspect}")
     end
   end
+
+  #
+  # Raised when the received response JSON has some missing field or invalid format.
+  #
+  class InvalidJSONError < Error
+  end
 end
