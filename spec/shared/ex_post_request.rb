@@ -1,7 +1,7 @@
 require_relative 'ex_requests_with_auth'
 require_relative 'ex_bad_response'
 
-shared_examples "post_request" do
+shared_examples "post_request" do |include_auth_tests:|
   describe '#post_request' do
     let(:response) {{ body: '{ "result": "ok" }', headers: { 'Content-Type': 'application/json' }}}
 
@@ -218,8 +218,10 @@ shared_examples "post_request" do
 
     include_examples "bad response handling", :post, 'com.example.service.doStuff'
 
-    include_examples "requests with authentication",
-      request: ->(subject, params) { subject.post_request('com.example.service.doStuff', **params) },
-      expected: ->(host) { [:post, "https://#{host}/xrpc/com.example.service.doStuff"] }
+    if include_auth_tests
+      include_examples "requests with authentication",
+        request: ->(subject, params) { subject.post_request('com.example.service.doStuff', **params) },
+        expected: ->(host) { [:post, "https://#{host}/xrpc/com.example.service.doStuff"] }
+    end
   end
 end

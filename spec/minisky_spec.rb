@@ -26,7 +26,7 @@ describe Minisky do
     end
 
     it 'should raise AuthError' do
-      expect { subject }.to raise_error(Minisky::AuthError)
+      expect { subject }.to raise_error(Minisky::AuthError, /Missing user id/)
     end
   end
 
@@ -36,7 +36,7 @@ describe Minisky do
     end
 
     it 'should raise AuthError' do
-      expect { subject }.to raise_error(Minisky::AuthError)
+      expect { subject }.to raise_error(Minisky::AuthError, /Missing user id/)
     end
   end
 
@@ -46,7 +46,7 @@ describe Minisky do
     end
 
     it 'should raise AuthError' do
-      expect { subject }.to raise_error(Minisky::AuthError)
+      expect { subject }.to raise_error(Minisky::AuthError, /Missing password/)
     end
   end
 
@@ -56,11 +56,11 @@ describe Minisky do
     end
 
     it 'should raise AuthError' do
-      expect { subject }.to raise_error(Minisky::AuthError)
+      expect { subject }.to raise_error(Minisky::AuthError, /Missing password/)
     end
   end
 
-  context 'with correct config' do
+  context 'with a user config inncluded' do
     before do
       File.write('myconfig.yml', YAML.dump(data))
     end
@@ -266,7 +266,7 @@ describe 'in Minisky instance' do
 
   let(:reloaded_config) { YAML.load(File.read('myconfig.yml')) }
 
-  context 'with correct config,' do
+  context 'with a user config,' do
     before do
       File.write('myconfig.yml', YAML.dump(data))
     end
@@ -274,7 +274,7 @@ describe 'in Minisky instance' do
     include_examples "authenticated user", 'bsky.test'
   end
 
-  context 'without a config' do
+  context 'without a config,' do
     subject { Minisky.new(host, nil) }
 
     include_examples "unauthenticated user"

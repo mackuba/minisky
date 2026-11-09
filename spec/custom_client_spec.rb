@@ -37,7 +37,7 @@ describe "in custom client" do
 
   let(:reloaded_config) { JSON.parse(File.read('test.json')) }
 
-  context 'with correct config,' do
+  context 'with user config,' do
     before do
       File.write('test.json', JSON.generate(data))
     end
@@ -54,7 +54,7 @@ describe "in custom client" do
       subject.progress.should be_nil
     end
 
-    describe '(requests)' do
+    describe '(requests)' do  # needs to be wrapped because the examples add a before{}
       include_examples "authenticated user", 'at.x.com'
     end
   end

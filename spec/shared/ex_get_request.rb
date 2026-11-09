@@ -1,7 +1,7 @@
 require_relative 'ex_requests_with_auth'
 require_relative 'ex_bad_response'
 
-shared_examples "get_request" do
+shared_examples "get_request" do |include_auth_tests:|
   describe '#get_request' do
     before do
       stub_request(:get, %r(https://#{host}/xrpc/com.example.service.getStuff(\?.*)?)).to_return(response)
@@ -74,8 +74,10 @@ shared_examples "get_request" do
 
     include_examples "bad response handling", :get, 'com.example.service.getStuff'
 
-    include_examples "requests with authentication",
-      request: ->(subject, params) { subject.get_request('com.example.service.getStuff', **params) },
-      expected: ->(host) { [:get, "https://#{host}/xrpc/com.example.service.getStuff"] }
+    if include_auth_tests
+      include_examples "requests with authentication",
+        request: ->(subject, params) { subject.get_request('com.example.service.getStuff', **params) },
+        expected: ->(host) { [:get, "https://#{host}/xrpc/com.example.service.getStuff"] }
+    end
   end
 end

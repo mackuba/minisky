@@ -1,6 +1,6 @@
 require_relative 'ex_requests_with_auth'
 
-shared_examples "fetch_all" do
+shared_examples "fetch_all" do |include_auth_tests:|
   describe '#fetch_all' do
     context 'when one page of items is returned' do
       before do
@@ -76,14 +76,16 @@ shared_examples "fetch_all" do
           .to_return_json(body: { "items": ["four", "five"] })
       end
 
-      include_examples "requests with authentication",
-        request: ->(subject, params) {
-          subject.fetch_all('com.example.service.fetchAll', field: 'items', **params)
-        },
-        expected: ->(host) {[
-          [:get, "https://#{host}/xrpc/com.example.service.fetchAll"],
-          [:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333"]
-        ]}
+      if include_auth_tests
+        include_examples "requests with authentication",
+          request: ->(subject, params) {
+            subject.fetch_all('com.example.service.fetchAll', field: 'items', **params)
+          },
+          expected: ->(host) {[
+            [:get, "https://#{host}/xrpc/com.example.service.fetchAll"],
+            [:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=ccc333"]
+          ]}
+      end
     end
 
     context 'when break condition is passed' do

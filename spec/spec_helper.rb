@@ -46,3 +46,17 @@ def make_token(exp_time)
 
   [header, payload, signature].map { |part| Base64.strict_encode64(JSON.generate(part)) }.join('.')
 end
+
+module WebMock
+  class WebMockMatcher
+    def with_auth(value)
+      if value == false
+        self.with { |req| !req.headers.has_key?('Authorization') }
+      elsif value == nil
+        self
+      else
+        self.with(headers: { 'Authorization' => value })
+      end
+    end
+  end
+end

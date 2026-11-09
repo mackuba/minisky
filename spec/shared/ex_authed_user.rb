@@ -153,7 +153,7 @@ shared_examples "authenticated user" do |host|
     end
   end
 
-  include_examples "get_request"
-  include_examples "post_request"
-  include_examples "fetch_all"
+  include_examples "get_request", include_auth_tests: true
+  include_examples "post_request", include_auth_tests: true
+  include_examples "fetch_all", include_auth_tests: true
 end
