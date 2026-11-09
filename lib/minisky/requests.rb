@@ -451,6 +451,8 @@ class Minisky
         return nil
       end
 
+      return nil if !payload.is_a?(Hash)
+
       exp = payload['exp']
       return nil unless exp.is_a?(Numeric) && exp > 0
 

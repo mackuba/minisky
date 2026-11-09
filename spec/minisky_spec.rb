@@ -151,13 +151,23 @@ describe Minisky do
   describe '#token_expiration_date' do
     subject { Minisky.new(host, nil) }
 
+    def token_with_payload(payload)
+      ['header', payload, 'sig'].join('.')
+    end
+
+    def token_with_json(json)
+      token_with_payload(Base64.strict_encode64(JSON.generate(json)))
+    end
+
     it 'should return nil for tokens with invalid encoding' do
-      token = "header.bad\xC3.sig".force_encoding('UTF-8')
+      token = token_with_payload("bad\xC3").force_encoding('UTF-8')
+
       subject.token_expiration_date(token).should be_nil
     end
 
     it 'should return nil for tokens with invalid Base64' do
-      token = "header.^&@#$%@#$%@#z.sig"
+      token = token_with_payload("^&@#$%@#$%@#z")
+
       subject.token_expiration_date(token).should be_nil
     end
 
@@ -171,38 +181,65 @@ describe Minisky do
     end
 
     it 'should return nil when the payload is not valid JSON' do
-      token = ['header', Base64.strict_encode64('nope'), 'sig'].join('.')
+      token = token_with_payload(Base64.strict_encode64('nope'))
+
       subject.token_expiration_date(token).should be_nil
     end
 
+    it 'should return nil when the payload is nil' do
+      token = token_with_json(nil)
+
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return nil when the payload is not a hash' do
+      payloads = [
+        ['exp', 1794252561],
+        1794252561,
+        true
+      ]
+
+      payloads.each do |payload|
+        token = token_with_json(payload)
+
+        subject.token_expiration_date(token).should be_nil
+      end
+    end
+
     it 'should return nil when exp field is missing' do
-      token = ['header', Base64.strict_encode64(JSON.generate({ 'aud' => 'aaaa' })), 'sig'].join('.')
+      token = token_with_json('aud' => 'aaaa')
+
       subject.token_expiration_date(token).should be_nil
     end
 
     it 'should return nil when exp field is not a number' do
-      token = ['header', Base64.strict_encode64(JSON.generate({ 'exp' => 'soon' })), 'sig'].join('.')
+      token = token_with_json('exp' => 'soon')
+
       subject.token_expiration_date(token).should be_nil
     end
 
     it 'should return nil when exp field is not a positive number' do
-      token = ['header', Base64.strict_encode64(JSON.generate({ 'exp' => 0 })), 'sig'].join('.')
+      token = token_with_json('exp' => 0)
+
       subject.token_expiration_date(token).should be_nil
     end
 
     it 'should return nil when expiration year is before 2023' do
       token = make_token(Time.utc(2022, 12, 24, 19, 00, 00))
+
       subject.token_expiration_date(token).should be_nil
     end
 
     it 'should return nil when expiration year is after 2100' do
       token = make_token(Time.utc(2101, 5, 5, 0, 0, 0))
+
       subject.token_expiration_date(token).should be_nil
     end
 
     it 'should return the expiration time for a valid token' do
       time = Time.at(Time.now.to_i + 7200)
       token = make_token(time)
+
       subject.token_expiration_date(token).should == time
     end
 
@@ -211,8 +248,7 @@ describe Minisky do
       encoded = Base64.urlsafe_encode64(json, padding: false)
       encoded.should == "eyJleHAiOjE4OTM0NTYwMDAsImF1ZCI6Ij8_PyJ9"
 
-      token = ['header', encoded, 'sig'].join('.')
-
+      token = token_with_payload(encoded)
       date = subject.token_expiration_date(token)
       date.should_not be_nil
       date.to_i.should == 1893456000
@@ -221,8 +257,7 @@ describe Minisky do
       encoded = Base64.urlsafe_encode64(json, padding: false)
       encoded.should == "eyJleHAiOjE4OTM0NTYwMDAsImF1ZCI6Ij4-PiJ9"
 
-      token = ['header', encoded, 'sig'].join('.')
-
+      token = token_with_payload(encoded)
       date = subject.token_expiration_date(token)
       date.should_not be_nil
       date.to_i.should == 1893456000
