@@ -8,23 +8,29 @@ shared_examples "custom client with incomplete auth" do
   end
 
   it 'should fail on get_request' do
-    expect { subject.get_request('com.example.service.getStuff') }.to raise_error(Minisky::AuthError)
+    expect { subject.get_request('com.example.service.getStuff') }.to raise_error(
+      Minisky::AuthError, /User id or password is missing/
+    )
   end
 
   it 'should fail on post_request' do
-    expect { subject.post_request('com.example.service.doStuff', 'qqq') }.to raise_error(Minisky::AuthError)
+    expect { subject.post_request('com.example.service.doStuff', 'qqq') }.to raise_error(
+      Minisky::AuthError, /User id or password is missing/
+    )
   end
 
   it 'should fail on fetch_all' do
-    expect { subject.fetch_all('com.example.service.fetchStuff', {}, field: 'feed') }.to raise_error(Minisky::AuthError)
+    expect { subject.fetch_all('com.example.service.fetchStuff', {}, field: 'feed') }.to raise_error(
+      Minisky::AuthError, /User id or password is missing/
+    )
   end
 
   it 'should fail on check_access' do
-    expect { subject.check_access }.to raise_error(Minisky::AuthError)
+    expect { subject.check_access }.to raise_error(Minisky::AuthError, /User id or password is missing/)
   end
 
   it 'should fail on log_in' do
-    expect { subject.log_in }.to raise_error(Minisky::AuthError)
+    expect { subject.log_in }.to raise_error(Minisky::AuthError, /To log in, please provide a user id and password/)
   end
 
   it 'should fail on perform_token_refresh' do

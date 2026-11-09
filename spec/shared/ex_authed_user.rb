@@ -153,6 +153,87 @@ shared_examples "authenticated user" do |host|
     end
   end
 
+  describe '#check_access' do
+    context 'if user is not logged in yet' do
+      before do
+        subject.user.access_token = nil
+        subject.user.refresh_token = nil
+        subject.save_config
+      end
+
+      it 'should log the user in' do
+        subject.expects(:log_in)
+
+        subject.check_access
+      end
+
+      it 'should return :logged_in' do
+        subject.stubs(:log_in)
+
+        subject.check_access.should == :logged_in
+      end
+    end
+
+    context 'if the access token is expired' do
+      before do
+        time = Time.at(Time.now.to_i - 600)
+        token = make_token(time)
+
+        subject.user.access_token = token
+      end
+
+      it 'should refresh the token' do
+        subject.expects(:log_in).never
+        subject.expects(:perform_token_refresh)
+
+        subject.check_access
+      end
+
+      it 'should return :refreshed' do
+        subject.stubs(:perform_token_refresh)
+
+        subject.check_access.should == :refreshed
+      end
+    end
+
+    context 'if the access token is fresh' do
+      before do
+        time = Time.at(Time.now.to_i + 600)
+        token = make_token(time)
+
+        subject.user.access_token = token
+      end
+
+      it 'should not refresh the token' do
+        subject.expects(:log_in).never
+        subject.expects(:perform_token_refresh).never
+
+        subject.check_access
+      end
+
+      it 'should return :ok' do
+        subject.check_access.should == :ok
+      end
+    end
+
+    context 'if the access token is an opaque string and not a JWT' do
+      before do
+        subject.user.access_token = 'secrettoken'
+      end
+
+      it 'should not refresh the token or raise an error' do
+        subject.expects(:log_in).never
+        subject.expects(:perform_token_refresh).never
+
+        expect { subject.check_access }.to_not raise_error
+      end
+
+      it 'should return :unknown' do
+        subject.check_access.should == :unknown
+      end
+    end
+  end
+
   include_examples "get_request", include_auth_tests: true
   include_examples "post_request", include_auth_tests: true
   include_examples "fetch_all", include_auth_tests: true

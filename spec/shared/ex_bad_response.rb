@@ -44,7 +44,7 @@ shared_examples "bad response handling" do |method, endpoint|
     end
 
     context 'if the response is a redirect' do
-      let(:response) {{ status: 302, headers: { 'Location': 'https://google.com' }}}
+      let(:response) {{ status: [302, 'Found'], headers: { 'Location': 'https://google.com' }}}
 
       it 'should raise an UnexpectedRedirect error' do
         expect { make_request }.to raise_error { |err|
@@ -52,6 +52,7 @@ shared_examples "bad response handling" do |method, endpoint|
           err.status.should == 302
           err.data.should be_a(Hash)
           err.location.should == 'https://google.com'
+          err.message.should == "302 Found: Unexpected redirect: https://google.com"
         }
       end
     end
@@ -101,6 +102,38 @@ shared_examples "bad response handling" do |method, endpoint|
       it 'should return the body as a string' do
         result = make_request
         result.should == 'ok'
+      end
+    end
+
+    describe 'exception message' do
+      context 'if the error includes a message field' do
+        let(:response) {{
+          body: JSON.generate(error: 'BadReq', message: 'This request was bad'),
+          status: [403, 'Forbidden'],
+          headers: { 'Content-Type': 'application/json' }
+        }}
+
+        it 'should include that message' do
+          expect { make_request }.to raise_error { |err|
+            err.should be_a(Minisky::ClientErrorResponse)
+            err.message.should == "403 Forbidden: This request was bad"
+          }
+        end
+      end
+
+      context "if the error doesn't include a message field" do
+        let(:response) {{
+          body: JSON.generate(error: 'BadReq'),
+          status: [403, 'Forbidden'],
+          headers: { 'Content-Type': 'application/json' }
+        }}
+
+        it 'should just include HTTP status' do
+          expect { make_request }.to raise_error { |err|
+            err.should be_a(Minisky::ClientErrorResponse)
+            err.message.should == "403 Forbidden"
+          }
+        end
       end
     end
   end

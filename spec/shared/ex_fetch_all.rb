@@ -39,6 +39,33 @@ shared_examples "fetch_all" do |include_auth_tests:|
       end
     end
 
+    context 'if one of the pages returns an error response' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "c7" })
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=c7")
+          .to_return(
+            body: JSON.generate(error: 'Server error', message: 'Something went very wrong'),
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+          )
+      end
+
+      it 'should rethrow the error from the last page fetch' do
+        expect { subject.fetch_all('com.example.service.fetchAll', field: 'items') }.to raise_error { |err|
+          err.should be_a(Minisky::ServerErrorResponse)
+          err.status.should == 500
+          err.data.should be_a(Hash)
+          err.error_type.should == 'Server error'
+          err.error_message.should == 'Something went very wrong'
+        }
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=c7").once
+      end
+    end
+
     context 'if the response includes a cursor set to explicit null' do
       before do
         stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
@@ -557,6 +584,29 @@ shared_examples "fetch_all" do |include_auth_tests:|
           }.to output('').to_stdout
         end
       end
+    end
+  end
+
+  context 'if a timeout option is set on the client instance' do
+    it 'should pass that timeout to Net::HTTP for each page' do
+      subject.timeout = 23
+
+      responses = [
+        { items: ['one'], cursor: 'page2' },
+        { items: ['two'] }
+      ].map do |body|
+        response = Net::HTTPOK.new('1.1', '200', 'OK')
+        response['Content-Type'] = 'application/json'
+        response.stubs(:body).returns(JSON.generate(body))
+        response
+      end
+
+      Net::HTTP.expects(:start)
+          .with(host, 443, { use_ssl: true, open_timeout: 23, read_timeout: 23 })
+          .twice
+          .returns(*responses)
+
+      subject.fetch_all('com.example.service.fetchAll', field: 'items').should == ['one', 'two']
     end
   end
 end
