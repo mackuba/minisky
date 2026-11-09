@@ -281,4 +281,20 @@ shared_examples "post_request" do |include_auth_tests:|
       end
     end
   end
+
+  context 'if a timeout option is set on the client instance' do
+    it 'should pass that timeout to Net::HTTP' do
+      subject.timeout = 14
+
+      response = Net::HTTPOK.new('1.1', '200', 'OK')
+      response['Content-Type'] = 'text/plain'
+      response.stubs(:body).returns('')
+
+      Net::HTTP.expects(:start)
+        .with(host, 443, { use_ssl: true, open_timeout: 14, read_timeout: 14 })
+        .returns(response)
+
+      subject.post_request('com.atproto.repo.getRecord')
+    end
+  end
 end

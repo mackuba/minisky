@@ -211,7 +211,10 @@ class Minisky
         url.query = URI.encode_www_form(params)
       end
 
-      response = Net::HTTP.post(url, body, headers)
+      request = Net::HTTP::Post.new(url, headers)
+      request.body = body
+
+      response = make_request(request)
       handle_response(response)
     end
 
