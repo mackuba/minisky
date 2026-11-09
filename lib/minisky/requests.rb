@@ -382,15 +382,12 @@ class Minisky
         raise AuthError, "To log in, please provide a user id and password"
       end
 
+      validate_user_id(user.id)
+
       data = {
         identifier: user.id,
         password: user.pass
       }
-
-      if user.id =~ /\A[^@]+@[^@]+\z/
-        STDERR.puts "Warning: logging in using an email address is deprecated in Minisky and will be " +
-          "removed in a future version. Use either a handle or a DID instead."
-      end
 
       json = post_request('com.atproto.server.createSession', data, auth: false)
 
@@ -506,6 +503,20 @@ class Minisky
 
 
     private
+
+    def validate_user_id(id)
+      if !id.is_a?(String)
+        raise AuthError, "id field must be a string"
+      end
+
+      if id !~ /\A@?[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)\z/ && id !~ /\Adid:(plc|web):[a-zA-Z0-9\.\:\%\-]+\z/
+        if id =~ /\A[^@]+@[^@]+\z/
+          raise AuthError, "Logging in using an email address is no longer supported in Minisky; use a handle or DID"
+        else
+          raise AuthError, "Invalid user identifier: #{id.inspect}"
+        end
+      end
+    end
 
     def make_request(request)
       options = {

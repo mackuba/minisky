@@ -60,7 +60,67 @@ describe Minisky do
     end
   end
 
-  context 'with a user config inncluded' do
+  context 'if the user ID is an email' do
+    before do
+      File.write('myconfig.yml', YAML.dump(data.merge('id' => 'jerry@blueskyweb.xyz')))
+    end
+
+    it 'should raise AuthError' do
+      expect { subject }.to raise_error(Minisky::AuthError, /no longer supported in Minisky/)
+    end
+  end
+
+  context 'if the user ID is not a handle or DID' do
+    it 'should raise AuthError' do
+      ['https://foo.bar', 'something', 'a...b'].each do |value|
+        File.write('myconfig.yml', YAML.dump(data.merge('id' => value)))
+
+        expect { subject }.to raise_error(Minisky::AuthError, /Invalid user identifier/)
+      end
+    end
+  end
+
+  context 'if the user ID is a handle' do
+    before do
+      File.write('myconfig.yml', YAML.dump(data.merge('id' => 'blueskyweb.xyz')))
+    end
+
+    it 'should not raise an error' do
+      expect { subject }.to_not raise_error
+    end
+  end
+
+  context 'if the user ID is a handle with @' do
+    before do
+      File.write('myconfig.yml', YAML.dump(data.merge('id' => '@blueskyweb.xyz')))
+    end
+
+    it 'should not raise an error' do
+      expect { subject }.to_not raise_error
+    end
+  end
+
+  context 'if the user ID is a did:plc' do
+    before do
+      File.write('myconfig.yml', YAML.dump(data.merge('id' => 'did:plc:pocibtmmmrflk6elnjt27hab')))
+    end
+
+    it 'should not raise an error' do
+      expect { subject }.to_not raise_error
+    end
+  end
+
+  context 'if the user ID is a did:web' do
+    before do
+      File.write('myconfig.yml', YAML.dump(data.merge('id' => 'did:web:blue.mackuba.eu')))
+    end
+
+    it 'should not raise an error' do
+      expect { subject }.to_not raise_error
+    end
+  end
+
+  context 'with a user config included' do
     before do
       File.write('myconfig.yml', YAML.dump(data))
     end

@@ -53,6 +53,8 @@ class Minisky
 
       raise AuthError, "Missing user id in the config file #{@config_file}" if user.id.nil?
       raise AuthError, "Missing password in the config file #{@config_file}" if user.pass.nil?
+
+      validate_user_id(user.id)
     else
       @config = nil
     end

@@ -63,6 +63,66 @@ shared_examples "authenticated user" do |host|
     it 'should return the response json' do
       subject.log_in.should == response_json
     end
+
+    context 'if the user ID is an email' do
+      before do
+        subject.user.id = 'jerry@blueskyweb.xyz'
+      end
+
+      it 'should raise AuthError' do
+        expect { subject.log_in }.to raise_error(Minisky::AuthError, /no longer supported in Minisky/)
+      end
+    end
+
+    context 'if the user ID is not a handle or DID' do
+      it 'should raise AuthError' do
+        ['https://foo.bar', 'something', 'a...b'].each do |value|
+          subject.user.id = value
+
+          expect { subject.log_in }.to raise_error(Minisky::AuthError, /Invalid user identifier/)
+        end
+      end
+    end
+
+    context 'if the user ID is a handle' do
+      before do
+        subject.user.id = 'blueskyweb.xyz'
+      end
+
+      it 'should not raise an error' do
+        expect { subject.log_in }.to_not raise_error
+      end
+    end
+
+    context 'if the user ID is a handle with @' do
+      before do
+        subject.user.id = '@blueskyweb.xyz'
+      end
+
+      it 'should not raise an error' do
+        expect { subject.log_in }.to_not raise_error
+      end
+    end
+
+    context 'if the user ID is a did:plc' do
+      before do
+        subject.user.id = 'did:plc:pocibtmmmrflk6elnjt27hab'
+      end
+
+      it 'should not raise an error' do
+        expect { subject.log_in }.to_not raise_error
+      end
+    end
+
+    context 'if the user ID is a did:web' do
+      before do
+        subject.user.id = 'did:web:blue.mackuba.eu'
+      end
+
+      it 'should not raise an error' do
+        expect { subject.log_in }.to_not raise_error
+      end
+    end
   end
 
   describe '#perform_token_refresh' do

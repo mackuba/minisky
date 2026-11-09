@@ -65,7 +65,7 @@ id: my.bsky.username
 pass: very-secret-password
 ```
 
-The `id` can be either your handle, or your DID, or the email you've used to sign up. It's recommended that you use the "app password" that you can create in the settings instead of your main account password.
+The `id` can be either your handle or your DID. It's recommended that you use the "app password" that you can create in the settings instead of your main account password.
 
 > [!NOTE]
 > Bluesky has recently implemented OAuth, but Minisky doesn't support it yet – it will be added in a future version. App passwords should still be supported for a fairly long time.
