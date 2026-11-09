@@ -152,7 +152,12 @@ describe Minisky do
     subject { Minisky.new(host, nil) }
 
     it 'should return nil for tokens with invalid encoding' do
-      token = "bad\xC3".force_encoding('UTF-8')
+      token = "header.bad\xC3.sig".force_encoding('UTF-8')
+      subject.token_expiration_date(token).should be_nil
+    end
+
+    it 'should return nil for tokens with invalid Base64' do
+      token = "header.^&@#$%@#$%@#z.sig"
       subject.token_expiration_date(token).should be_nil
     end
 
@@ -199,6 +204,28 @@ describe Minisky do
       time = Time.at(Time.now.to_i + 7200)
       token = make_token(time)
       subject.token_expiration_date(token).should == time
+    end
+
+    it 'should correctly parse url-safe Base64' do
+      json = '{"exp":1893456000,"aud":"???"}'
+      encoded = Base64.urlsafe_encode64(json, padding: false)
+      encoded.should == "eyJleHAiOjE4OTM0NTYwMDAsImF1ZCI6Ij8_PyJ9"
+
+      token = ['header', encoded, 'sig'].join('.')
+
+      date = subject.token_expiration_date(token)
+      date.should_not be_nil
+      date.to_i.should == 1893456000
+
+      json = '{"exp":1893456000,"aud":">>>"}'
+      encoded = Base64.urlsafe_encode64(json, padding: false)
+      encoded.should == "eyJleHAiOjE4OTM0NTYwMDAsImF1ZCI6Ij4-PiJ9"
+
+      token = ['header', encoded, 'sig'].join('.')
+
+      date = subject.token_expiration_date(token)
+      date.should_not be_nil
+      date.to_i.should == 1893456000
     end
   end
 

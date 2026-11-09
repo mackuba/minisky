@@ -440,7 +440,13 @@ class Minisky
       return nil unless parts.length == 3
 
       begin
-        payload = JSON.parse(Base64.decode64(parts[1]))
+        json = Base64.urlsafe_decode64(parts[1])
+      rescue ArgumentError
+        return nil
+      end
+
+      begin
+        payload = JSON.parse(json)
       rescue JSON::ParserError
         return nil
       end

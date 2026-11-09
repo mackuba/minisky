@@ -47,7 +47,7 @@ def make_token(exp_time)
   payload = { exp: exp_time.to_i }
   signature = 'signature'
 
-  [header, payload, signature].map { |part| Base64.strict_encode64(JSON.generate(part)) }.join('.')
+  [header, payload, signature].map { |part| Base64.urlsafe_encode64(JSON.generate(part)) }.join('.')
 end
 
 module WebMock
