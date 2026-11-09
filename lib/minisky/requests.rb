@@ -288,7 +288,7 @@ class Minisky
     def fetch_all(method, params = nil, auth: default_auth_mode,
                   field: nil, break_when: nil, max_pages: nil, headers: nil, progress: @default_progress)
       data = []
-      params = {} if params.nil?
+      params = (params.nil?) ? {} : params.dup
       pages = 0
 
       loop do

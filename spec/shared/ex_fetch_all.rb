@@ -70,6 +70,12 @@ shared_examples "fetch_all" do |include_auth_tests:|
         subject.fetch_all('com.example.service.fetchAll', { type: 'post' }, field: 'items')
         verify_fetch_all
       end
+
+      it 'should not modify passed params object in place' do
+        params = { type: 'post' }.freeze
+
+        subject.fetch_all('com.example.service.fetchAll', params, field: 'items')
+      end
     end
 
     context 'when params are empty' do
