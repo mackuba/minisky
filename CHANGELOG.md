@@ -1,4 +1,13 @@
-## [0.5.1] - 2026-02-15
+## [0.5.2] – 2026-11-09
+
+* added `:timeout` option which is passed to `:open_timeout` & `:read_timeout` on requests
+* improved error handling for JSON responses, JWT payloads, or wrong argument values
+* fixed access token JWT parsing which could fail sometimes due to wrong version of Base64 being expected
+* detect repeated cursors during `fetch_all` pagination, which could lead to an infinite loop when fetching from a misbehaving server
+* changed `fetch_all` to not modify the received `params` object in place
+* added `frozen_string_literal` comments
+
+## [0.5.1] – 2026-02-15
 
 The "really niche bugfix" edition:
 
@@ -15,7 +24,7 @@ The "really niche bugfix" edition:
 
 Also added [YARD API documentation](https://rubydoc.info/gems/minisky/) for most of the code.
 
-## [0.5.0] - 2024-12-27 🎄
+## [0.5.0] – 2024-12-27 🎄
 
 * `host` param in the initializer can be passed with a `https://` prefix (useful if you're passing it directly from a DID document, e.g. using DIDKit)
 * added validation of the `method` parameter in request calls: it needs to be either a proper NSID, or a full URL as a string or a URI object
@@ -27,7 +36,7 @@ Also added [YARD API documentation](https://rubydoc.info/gems/minisky/) for most
 * `check_access` now returns a result symbol: `:logged_in`, `:refreshed` or `:ok`
 * fixed `method_missing` setter on `User`
 
-## [0.4.0] - 2024-03-31 🐣
+## [0.4.0] – 2024-03-31 🐣
 
 * allow passing non-JSON body to requests (e.g. when uploading blobs)
 * allow passing custom headers to requests, including overriding `Content-Type`
@@ -36,11 +45,11 @@ Also added [YARD API documentation](https://rubydoc.info/gems/minisky/) for most
 * aliased `default_progress` setting as `progress`
 * added `base64` dependency explicitly to the gemspec – fixes a warning in Ruby 3.3, since it will be extracted as an optional gem in 3.4
 
-## [0.3.1] - 2023-10-10
+## [0.3.1] – 2023-10-10
 
 * fixed Minisky not working on Ruby 2.x
 
-## [0.3.0] - 2023-10-05
+## [0.3.0] – 2023-10-05
 
 * authentication improvements & changes:
   - Minisky now automatically manages access tokens, calling `check_access` manually is not necessary (set `auto_manage_tokens` to `false` to disable this)
@@ -53,7 +62,7 @@ Also added [YARD API documentation](https://rubydoc.info/gems/minisky/) for most
 * `user` wrapper can also be used for writing fields to the config
 * improved error handling
 
-## [0.2.0] - 2023-09-02
+## [0.2.0] – 2023-09-02
 
 * more consistent handling of parameters in the main methods:
   - `auth` is now a named parameter
@@ -69,7 +78,7 @@ Also added [YARD API documentation](https://rubydoc.info/gems/minisky/) for most
 * config is now accessed in `Requests` from the client object as a `config` property instead of `@config` ivar
 * config fields are exposed as a `user` wrapper object, e.g. `user.did` delegates to `@config['did']`
 
-## [0.1.0] - 2023-09-01
+## [0.1.0] – 2023-09-01
 
 - extracted most code to a `Requests` module that can be included into a different client class with custom config handling
 - added `#check_access` method
@@ -77,7 +86,7 @@ Also added [YARD API documentation](https://rubydoc.info/gems/minisky/) for most
 - config file name can be passed as a parameter
 - added tests
 
-## [0.0.1] - 2023-08-30
+## [0.0.1] – 2023-08-30
 
 Initial release – extracted from original gist:
 
