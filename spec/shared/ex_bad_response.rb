@@ -82,7 +82,7 @@ shared_examples "bad response handling" do |method, endpoint|
 
       it 'should raise an error with the response body' do
         expect { make_request }.to raise_error { |err|
-          err.should be_a(Minisky::BadResponse)
+          err.should be_a(Minisky::ServerErrorResponse)
           err.status.should == 503
           err.data.should == '<html>wtf</html>'
           err.error_type.should be_nil

@@ -64,7 +64,7 @@ shared_examples "post_request" do |include_auth_tests:|
 
           WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
             .with(headers: { 'Content-Type': 'application/json', 'X-API-Token': '8768768768' })
-        end        
+        end
       end
     end
 
@@ -107,7 +107,7 @@ shared_examples "post_request" do |include_auth_tests:|
 
           WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
             .with { |req| req.headers.all? { |k, v| k.downcase != 'content-type' } && req.headers['Blob-Type'] == 'blobby' }
-        end        
+        end
       end
     end
 
@@ -150,7 +150,7 @@ shared_examples "post_request" do |include_auth_tests:|
 
           WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
             .with { |req| req.headers.all? { |k, v| k.downcase != 'content-type' } && req.headers['Blob-Type'] == 'blobby' }
-        end        
+        end
       end
     end
 
@@ -193,7 +193,7 @@ shared_examples "post_request" do |include_auth_tests:|
 
           WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
             .with { |req| req.headers.all? { |k, v| k.downcase != 'content-type' } && req.headers['Blob-Type'] == 'blobby' }
-        end        
+        end
       end
     end
 
@@ -205,6 +205,39 @@ shared_examples "post_request" do |include_auth_tests:|
 
         WebMock.should have_requested(:post, "https://#{host}/xrpc/app.bsky.video.uploadVideo?name=rickroll.mp4").once
           .with(body: '/\/\/\/\/\/\/')
+      end
+    end
+
+    context 'with Hash data and query params' do
+      it 'should add the params to the URL and send data as JSON' do
+        stub_request(:post, "https://#{host}/xrpc/app.bsky.blob.uploadJSON?name=file.json").to_return(response)
+
+        subject.post_request('app.bsky.blob.uploadJSON', { foo: 'bar' }, params: { name: 'file.json' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/app.bsky.blob.uploadJSON?name=file.json").once
+          .with(body: '{"foo":"bar"}', headers: { 'Content-Type': 'application/json' })
+      end
+    end
+
+    context 'with string data and empty query params' do
+      it 'should not add anything to the URL' do
+        stub_request(:post, "https://#{host}/xrpc/app.bsky.video.uploadVideo").to_return(response)
+
+        subject.post_request('app.bsky.video.uploadVideo', 'video', params: {})
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/app.bsky.video.uploadVideo").once
+          .with(body: 'video')
+      end
+    end
+
+    context 'with string data and nil query params' do
+      it 'should not add anything to the URL' do
+        stub_request(:post, "https://#{host}/xrpc/app.bsky.video.uploadVideo").to_return(response)
+
+        subject.post_request('app.bsky.video.uploadVideo', 'video', params: nil)
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/app.bsky.video.uploadVideo").once
+          .with(body: 'video')
       end
     end
 
@@ -222,6 +255,30 @@ shared_examples "post_request" do |include_auth_tests:|
       include_examples "requests with authentication",
         request: ->(subject, params) { subject.post_request('com.example.service.doStuff', **params) },
         expected: ->(host) { [:post, "https://#{host}/xrpc/com.example.service.doStuff"] }
+    end
+  end
+
+  describe 'endpoint handling' do
+    let(:response) {{ body: '{ "result": "ok" }', headers: { 'Content-Type': 'application/json' }}}
+
+    context 'if the method name is a URL string' do
+      it 'should request that URL' do
+        stub_request(:post, "https://app.example.com/create").to_return(response)
+
+        subject.post_request("https://app.example.com/create")
+
+        WebMock.should have_requested(:post, "https://app.example.com/create").once
+      end
+    end
+
+    context 'if the method name is a URI object' do
+      it 'should request that URL' do
+        stub_request(:post, "https://app.example.com/create").to_return(response)
+
+        subject.post_request(URI("https://app.example.com/create"))
+
+        WebMock.should have_requested(:post, "https://app.example.com/create").once
+      end
     end
   end
 end

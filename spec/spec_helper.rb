@@ -5,6 +5,9 @@ require 'json'
 INVALID_METHOD_NAMES = [
   'getUsers',
   '127.0.0.1',
+  '/robots.txt',
+  'did:plc',
+  '/com.atproto.repo.getRecords',
   '/xrpc/com.atproto.repo.getRecords',
   'app.bsky.feed.under_score'
 ]

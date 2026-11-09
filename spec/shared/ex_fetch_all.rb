@@ -28,7 +28,7 @@ shared_examples "fetch_all" do |include_auth_tests:|
         ])
       end
 
-      it 'should make multiple requests, passing the last cursor' do
+      it 'should make multiple requests, passing the cursor from the previous page' do
         subject.fetch_all('com.example.service.fetchAll', field: 'items')
         verify_fetch_all
       end
@@ -36,6 +36,25 @@ shared_examples "fetch_all" do |include_auth_tests:|
       it 'should return all the parsed items collected from the responses' do
         result = subject.fetch_all('com.example.service.fetchAll', field: 'items')
         result.should == ["one", "two", "three", "four", "five"]
+      end
+    end
+
+    context 'if the response includes a cursor set to explicit null' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "c7" })
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=c7")
+          .to_return_json(body: { "items": ["four", "five"], "cursor": nil })
+      end
+
+      it 'should accept the response and stop at that page' do
+        result = subject.fetch_all('com.example.service.fetchAll', field: 'items')
+
+        result.should == ["one", "two", "three", "four", "five"]
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=c7").once
       end
     end
 
@@ -53,6 +72,20 @@ shared_examples "fetch_all" do |include_auth_tests:|
       end
     end
 
+    context 'when params are empty' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "items": ["one", "two", "three"] },
+          { "items": ["four", "five"] },
+        ])
+      end
+
+      it 'should not add anything to the url' do
+        subject.fetch_all('com.example.service.fetchAll', {}, field: 'items')
+        verify_fetch_all
+      end
+    end
+
     context 'when params are an explicit nil' do
       before do
         stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
@@ -63,6 +96,51 @@ shared_examples "fetch_all" do |include_auth_tests:|
 
       it 'should not add anything to the url' do
         subject.fetch_all('com.example.service.fetchAll', nil, field: 'items')
+        verify_fetch_all
+      end
+    end
+
+    context 'when headers are passed' do
+      before do
+        stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
+          { "items": ["one", "two", "three"] },
+          { "items": ["four", "five"] },
+        ])
+      end
+
+      let(:headers) {{ 'X-API-Key' => 'waow' }}
+
+      it 'should pass the headers to every request' do
+        subject.fetch_all('com.example.service.fetchAll', field: 'items', headers: headers)
+
+        @stubbed_urls.each do |url|
+          WebMock.should have_requested(:get, url).once.with(headers: headers)
+        end
+      end
+    end
+
+    context 'if the method name is a URL string' do
+      it 'should request that URL' do
+        stub_fetch_all("https://other.host/xrpc/com.atproto.repo.listRecords", [
+          { "records": [{ a: 1 }, { a: 5 }] },
+          { "records": [{ b: 7 }] },
+        ])
+
+        subject.fetch_all('https://other.host/xrpc/com.atproto.repo.listRecords', field: 'records')
+
+        verify_fetch_all
+      end
+    end
+
+    context 'if the method name is a URI object' do
+      it 'should request that URI' do
+        stub_fetch_all("https://other.host/xrpc/com.atproto.repo.listRecords", [
+          { "records": [{ a: 1 }, { a: 5 }] },
+          { "records": [{ b: 7 }] },
+        ])
+
+        subject.fetch_all(URI('https://other.host/xrpc/com.atproto.repo.listRecords'), field: 'records')
+
         verify_fetch_all
       end
     end
@@ -254,7 +332,7 @@ shared_examples "fetch_all" do |include_auth_tests:|
         }
 
         WebMock.should have_requested(:get, @stubbed_urls[0]).once
-        WebMock.should_not have_requested(:get, @stubbed_urls[1])        
+        WebMock.should_not have_requested(:get, @stubbed_urls[1])
       end
     end
 
@@ -273,7 +351,7 @@ shared_examples "fetch_all" do |include_auth_tests:|
         }
 
         WebMock.should have_requested(:get, @stubbed_urls[0]).once
-        WebMock.should_not have_requested(:get, @stubbed_urls[1])        
+        WebMock.should_not have_requested(:get, @stubbed_urls[1])
       end
     end
 
