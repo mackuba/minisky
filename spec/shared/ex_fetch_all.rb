@@ -291,6 +291,30 @@ shared_examples "fetch_all" do |include_auth_tests:|
           result.should == ["item0", "item1", "item2", "item3", "item4"]
         end
       end
+
+      it 'should throw an error if max_pages is 0' do
+        expect { subject.fetch_all('app.bsky.feed.getPosts', field: 'feed', max_pages: 0) }.to raise_error(
+          ArgumentError, "max_pages should be a positive integer"
+        )
+      end
+
+      it 'should throw an error if max_pages is negative' do
+        expect { subject.fetch_all('app.bsky.feed.getPosts', field: 'feed', max_pages: -2) }.to raise_error(
+          ArgumentError, "max_pages should be a positive integer"
+        )
+      end
+
+      it 'should throw an error if max_pages is a float' do
+        expect { subject.fetch_all('app.bsky.feed.getPosts', field: 'feed', max_pages: 1.5) }.to raise_error(
+          ArgumentError, "max_pages should be a positive integer"
+        )
+      end
+
+      it 'should throw an error if max_pages is not a number' do
+        expect { subject.fetch_all('app.bsky.feed.getPosts', field: 'feed', max_pages: 'max') }.to raise_error(
+          ArgumentError, "max_pages should be a positive integer"
+        )
+      end
     end
 
     context 'when an empty page is received, but with a cursor' do

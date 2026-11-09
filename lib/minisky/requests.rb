@@ -291,6 +291,10 @@ class Minisky
       params = (params.nil?) ? {} : params.dup
       pages = 0
 
+      if max_pages && !(max_pages.is_a?(Integer) && max_pages > 0)
+        raise ArgumentError, "max_pages should be a positive integer"
+      end
+
       loop do
         print(progress) if progress
 
