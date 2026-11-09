@@ -256,6 +256,91 @@ shared_examples "post_request" do |include_auth_tests:|
         request: ->(subject, params) { subject.post_request('com.example.service.doStuff', **params) },
         expected: ->(host) { [:post, "https://#{host}/xrpc/com.example.service.doStuff"] }
     end
+
+    describe '#post alias' do
+      let(:post_data) {
+        { repo: 'kate.dev', limit: 40, fields: ['name', 'posts'] }
+      }
+
+      it 'should make a request to the given XRPC endpoint' do
+        subject.post('com.example.service.doStuff')
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+      end
+
+      it 'should return parsed JSON' do
+        result = subject.post('com.example.service.doStuff')
+
+        result.should == { 'result' => 'ok' }
+      end
+
+      it 'should encode data as JSON in the body' do
+        subject.post('com.example.service.doStuff', post_data)
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: JSON.generate(post_data))
+      end
+
+      it 'should accept a custom Content-Type' do
+        subject.post('com.example.service.doStuff', post_data, headers: { 'Content-Type': 'application/graphql' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(headers: { 'Content-Type': 'application/graphql' })
+      end
+
+      it 'should accept data as string' do
+        subject.post('com.example.service.doStuff', 'blob', headers: { 'Blob-Type': 'blobby' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(headers: { 'Blob-Type' => 'blobby' })
+      end
+
+      it 'should accept query params' do
+        stub_request(:post, "https://#{host}/xrpc/app.bsky.video.uploadVideo?name=rickroll.mp4").to_return(response)
+
+        subject.post('app.bsky.video.uploadVideo', '/\/\/\/\/\/\/', params: { name: 'rickroll.mp4' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/app.bsky.video.uploadVideo?name=rickroll.mp4").once
+          .with(body: '/\/\/\/\/\/\/')
+      end
+
+      it 'should accept query params and JSON data' do
+        stub_request(:post, "https://#{host}/xrpc/app.bsky.blob.uploadJSON?name=file.json").to_return(response)
+
+        subject.post('app.bsky.blob.uploadJSON', { foo: 'bar' }, params: { name: 'file.json' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/app.bsky.blob.uploadJSON?name=file.json").once
+          .with(body: '{"foo":"bar"}', headers: { 'Content-Type': 'application/json' })
+      end
+
+      it 'should accept nil data' do
+        subject.post('com.example.service.doStuff', nil)
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: '')
+      end
+
+      it 'should accept no data' do
+        subject.post('com.example.service.doStuff')
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(body: '')
+      end
+
+      it 'should accept nil data and headers' do
+        subject.post('com.example.service.doStuff', nil, headers: { 'Blob-Type': 'blobby' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(headers: { 'Blob-Type' => 'blobby' })
+      end
+
+      it 'should accept no data and headers' do
+        subject.post('com.example.service.doStuff', headers: { 'Blob-Type': 'blobby' })
+
+        WebMock.should have_requested(:post, "https://#{host}/xrpc/com.example.service.doStuff").once
+          .with(headers: { 'Blob-Type' => 'blobby' })
+      end
+    end
   end
 
   describe 'endpoint handling' do

@@ -158,6 +158,11 @@ class Minisky
       handle_response(response)
     end
 
+    # (see #get_request)
+    def get(*args, **kwargs)
+      get_request(*args, **kwargs)
+    end
+
     # Sends a POST request to the service's API.
     #
     # @param method [String, URI] an XRPC endpoint name or a full URL
@@ -217,6 +222,11 @@ class Minisky
 
       response = make_request(request)
       handle_response(response)
+    end
+
+    # (see #post_request)
+    def post(*args, **kwargs)
+      post_request(*args, **kwargs)
     end
 
     # Fetches and merges paginated responses from a service's endpoint in a loop, updating the

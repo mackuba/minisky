@@ -79,6 +79,41 @@ shared_examples "get_request" do |include_auth_tests:|
         request: ->(subject, params) { subject.get_request('com.example.service.getStuff', **params) },
         expected: ->(host) { [:get, "https://#{host}/xrpc/com.example.service.getStuff"] }
     end
+
+    describe '#get alias' do
+      it 'should make a request to the given XRPC endpoint' do
+        subject.get('com.example.service.getStuff')
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
+      end
+
+      it 'should return parsed JSON' do
+        result = subject.get('com.example.service.getStuff')
+
+        result.should == { 'result' => 123 }
+      end
+
+      it 'should append params to the URL' do
+        subject.get('com.example.service.getStuff', { repo: 'whitehouse.gov', limit: 80 })
+
+        WebMock.should have_requested(:get,
+         "https://#{host}/xrpc/com.example.service.getStuff?repo=whitehouse.gov&limit=80").once
+      end
+
+      it 'should include the custom headers' do
+        subject.get('com.example.service.getStuff', { user: 'alf.gov' }, headers: { 'Food': 'cats' })
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff?user=alf.gov").once
+         .with(headers: { 'Food' => 'cats' })
+      end
+
+      it 'should include the custom headers without params' do
+        subject.get('com.example.service.getStuff', headers: { 'Food': 'cats' })
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.getStuff").once
+         .with(headers: { 'Food' => 'cats' })
+      end
+    end
   end
 
   describe 'host handling' do
