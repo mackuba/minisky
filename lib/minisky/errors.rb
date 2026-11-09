@@ -123,6 +123,12 @@ class Minisky
   end
 
   #
+  # Raised when the received response includes an invalid or unexpected cursor.
+  #
+  class InvalidCursorError < Error
+  end
+
+  #
   # Raised when the received response JSON has some missing field or invalid format.
   #
   class InvalidJSONError < Error

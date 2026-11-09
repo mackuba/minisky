@@ -6,6 +6,7 @@ require_relative 'errors'
 require 'base64'
 require 'json'
 require 'net/http'
+require 'set'
 require 'time'
 require 'uri'
 
@@ -290,6 +291,7 @@ class Minisky
       data = []
       params = (params.nil?) ? {} : params.dup
       pages = 0
+      seen_cursors = Set.new
 
       if max_pages && !(max_pages.is_a?(Integer) && max_pages > 0)
         raise ArgumentError, "max_pages should be a positive integer"
@@ -304,8 +306,11 @@ class Minisky
         records = response[field]
         cursor = response['cursor']
 
+        raise InvalidCursorError, "Repeated cursor: #{cursor}" if seen_cursors.include?(cursor)
+
         data.concat(records)
         params[:cursor] = cursor
+        seen_cursors << cursor
         pages += 1
 
         break if !cursor || pages == max_pages || (stop_fetch_on_empty_page && records.empty?)

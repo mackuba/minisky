@@ -347,6 +347,30 @@ shared_examples "fetch_all" do |include_auth_tests:|
       end
     end
 
+    context 'when a cursor is received that have already been seen on an earlier page' do
+      before do
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll")
+          .to_return_json(body: { "items": ["one", "two", "three"], "cursor": "cursorX" })
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=cursorX")
+          .to_return_json(body: { "items": ["four", "five"], "cursor": "cursorY" })
+          .then.to_raise(StandardError.new('Infinite request loop'))
+
+        stub_request(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=cursorY")
+          .to_return_json(body: { "items": ["four", "five"], "cursor": "cursorX" })
+      end
+
+      it 'should throw an InvalidCursorError' do
+        expect {
+          subject.fetch_all('com.example.service.fetchAll', field: 'items')
+        }.to raise_error(Minisky::InvalidCursorError)
+
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll").once
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=cursorX").once
+        WebMock.should have_requested(:get, "https://#{host}/xrpc/com.example.service.fetchAll?cursor=cursorY").once
+      end
+    end
+
     context 'when field is not passed' do
       before do
         stub_fetch_all("https://#{host}/xrpc/com.example.service.fetchAll", [
