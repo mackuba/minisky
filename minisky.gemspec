@@ -30,5 +30,4 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'base64', '~> 0.1'
-  spec.add_dependency 'uri', '>= 0.11.0', '< 2.0'
 end

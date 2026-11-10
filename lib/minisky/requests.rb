@@ -535,10 +535,19 @@ class Minisky
       end
     end
 
-    def validate_auth_origin(uri)
-      unless URI(base_url).origin.downcase == uri.origin.downcase
+    def uri_origin(uri)
+      return uri.origin if uri.respond_to?(:origin)
+
+      "#{uri.scheme}://#{uri.host}:#{uri.port}"
+    end
+
+    def validate_auth_origin(request_uri)
+      base_origin = uri_origin(URI(base_url))
+      req_origin = uri_origin(request_uri)
+
+      unless base_origin == req_origin
         raise AuthError, "For security, Minisky does not allow sending access tokens to URLs on different origins " +
-          "(#{URI(base_url).origin} vs. #{uri.origin}); use `auth: false` to make a request without authentication, " +
+          "(#{base_origin} vs. #{req_origin}); use `auth: false` to make a request without authentication, " +
           "or an explicit value like `auth: minisky.user.access_token` to override the warning."
       end
     end
