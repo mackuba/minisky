@@ -153,28 +153,98 @@ shared_examples "fetch_all" do |include_auth_tests:|
     end
 
     context 'if the method name is a URL string' do
-      it 'should request that URL' do
-        stub_fetch_all("https://other.host/xrpc/com.atproto.repo.listRecords", [
-          { "records": [{ a: 1 }, { a: 5 }] },
-          { "records": [{ b: 7 }] },
-        ])
+      let(:url) { "https://other.host/xrpc/com.atproto.repo.listRecords" }
 
-        subject.fetch_all('https://other.host/xrpc/com.atproto.repo.listRecords', field: 'records')
+      context 'with auth: false' do
+        it 'should request that URL' do
+          stub_fetch_all(url, [
+            { "records": [{ a: 1 }, { a: 5 }] },
+            { "records": [{ b: 7 }] },
+          ])
 
-        verify_fetch_all
+          subject.fetch_all(url, field: 'records', auth: false)
+
+          verify_fetch_all
+        end
+      end
+
+      context 'with auth: true' do
+        it 'should raise an AuthError' do
+          expect { subject.fetch_all(url, field: 'records', auth: true) }.to raise_error(
+            Minisky::AuthError, /Minisky does not allow sending access tokens/
+          )
+
+          if subject.send_auth_headers
+            expect { subject.fetch_all(url, field: 'records') }.to raise_error(
+              Minisky::AuthError, /Minisky does not allow sending access tokens/
+            )
+          end
+
+          WebMock.should_not have_requested(:get, /.*/)
+        end
+      end
+
+      context 'with auth: token' do
+        it 'should request that URL' do
+          stub_fetch_all(url, [
+            { "records": [{ a: 1 }, { a: 5 }] },
+            { "records": [{ b: 7 }] },
+          ])
+
+          subject.fetch_all(url, field: 'records', auth: 'zzz')
+
+          @stubbed_urls.each do |url|
+            WebMock.should have_requested(:get, url).once.with(headers: { 'Authorization' => 'Bearer zzz' })
+          end
+        end
       end
     end
 
     context 'if the method name is a URI object' do
-      it 'should request that URI' do
-        stub_fetch_all("https://other.host/xrpc/com.atproto.repo.listRecords", [
-          { "records": [{ a: 1 }, { a: 5 }] },
-          { "records": [{ b: 7 }] },
-        ])
+      let(:url) { "https://other.host/xrpc/com.atproto.repo.listRecords" }
 
-        subject.fetch_all(URI('https://other.host/xrpc/com.atproto.repo.listRecords'), field: 'records')
+      context 'with auth: false' do
+        it 'should request that URI' do
+          stub_fetch_all(url, [
+            { "records": [{ a: 1 }, { a: 5 }] },
+            { "records": [{ b: 7 }] },
+          ])
 
-        verify_fetch_all
+          subject.fetch_all(URI(url), field: 'records', auth: false)
+
+          verify_fetch_all
+        end
+      end
+
+      context 'with auth: true' do
+        it 'should raise an AuthError' do
+          expect { subject.fetch_all(URI(url), field: 'records', auth: true) }.to raise_error(
+            Minisky::AuthError, /Minisky does not allow sending access tokens/
+          )
+
+          if subject.send_auth_headers
+            expect { subject.fetch_all(URI(url), field: 'records') }.to raise_error(
+              Minisky::AuthError, /Minisky does not allow sending access tokens/
+            )
+          end
+
+          WebMock.should_not have_requested(:get, /.*/)
+        end
+      end
+
+      context 'with auth: token' do
+        it 'should request that URI' do
+          stub_fetch_all(url, [
+            { "records": [{ a: 1 }, { a: 5 }] },
+            { "records": [{ b: 7 }] },
+          ])
+
+          subject.fetch_all(URI(url), field: 'records', auth: 'zzz')
+
+          @stubbed_urls.each do |url|
+            WebMock.should have_requested(:get, url).once.with(headers: { 'Authorization' => 'Bearer zzz' })
+          end
+        end
       end
     end
 

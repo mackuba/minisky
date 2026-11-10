@@ -143,16 +143,20 @@ class Minisky
     #   feed = sky.get_request('app.bsky.feed.getTimeline', { limit: 100 })
 
     def get_request(method, params = nil, auth: default_auth_mode, headers: nil)
-      check_access if auto_manage_tokens && auth == true
+      uri = build_request_uri(method)
 
-      headers = authentication_header(auth).merge(headers || {})
-      url = build_request_uri(method)
-
-      if params && !params.empty?
-        url.query = URI.encode_www_form(params)
+      if auth == true
+        validate_auth_origin(uri)
+        check_access if auto_manage_tokens
       end
 
-      request = Net::HTTP::Get.new(url, headers)
+      headers = authentication_header(auth).merge(headers || {})
+
+      if params && !params.empty?
+        uri.query = URI.encode_www_form(params)
+      end
+
+      request = Net::HTTP::Get.new(uri, headers)
 
       response = make_request(request)
       handle_response(response)
@@ -200,7 +204,12 @@ class Minisky
     #   })
 
     def post_request(method, data = nil, auth: default_auth_mode, headers: nil, params: nil)
-      check_access if auto_manage_tokens && auth == true
+      uri = build_request_uri(method)
+
+      if auth == true
+        validate_auth_origin(uri)
+        check_access if auto_manage_tokens
+      end
 
       headers = authentication_header(auth).merge(headers || {})
 
@@ -211,13 +220,11 @@ class Minisky
         headers["Content-Type"] = "application/json" unless headers.keys.any? { |k| k.to_s.downcase == 'content-type' }
       end
 
-      url = build_request_uri(method)
-
       if params && !params.empty?
-        url.query = URI.encode_www_form(params)
+        uri.query = URI.encode_www_form(params)
       end
 
-      request = Net::HTTP::Post.new(url, headers)
+      request = Net::HTTP::Post.new(uri, headers)
       request.body = body
 
       response = make_request(request)
@@ -525,6 +532,14 @@ class Minisky
         else
           raise AuthError, "Invalid user identifier: #{id.inspect}"
         end
+      end
+    end
+
+    def validate_auth_origin(uri)
+      unless URI(base_url).origin.downcase == uri.origin.downcase
+        raise AuthError, "For security, Minisky does not allow sending access tokens to URLs on different origins " +
+          "(#{URI(base_url).origin} vs. #{uri.origin}); use `auth: false` to make a request without authentication, " +
+          "or an explicit value like `auth: minisky.user.access_token` to override the warning."
       end
     end
 

@@ -345,24 +345,84 @@ shared_examples "post_request" do |include_auth_tests:|
 
   describe 'endpoint handling' do
     let(:response) {{ body: '{ "result": "ok" }', headers: { 'Content-Type': 'application/json' }}}
+    let(:url) { "https://app.example.com/create" }
+
+    before do
+      stub_request(:post, url).to_return(response)
+    end
 
     context 'if the method name is a URL string' do
-      it 'should request that URL' do
-        stub_request(:post, "https://app.example.com/create").to_return(response)
+      context 'with auth: false' do
+        it 'should request that URL' do
+          subject.post_request(url, auth: false)
 
-        subject.post_request("https://app.example.com/create")
+          WebMock.should have_requested(:post, url).once
+        end
+      end
 
-        WebMock.should have_requested(:post, "https://app.example.com/create").once
+      context 'with auth: true' do
+        it 'should raise an AuthError' do
+          expect { subject.post_request(url, auth: true) }.to raise_error(
+            Minisky::AuthError, /Minisky does not allow sending access tokens/
+          )
+
+          if subject.send_auth_headers
+            expect { subject.post_request(url) }.to raise_error(
+              Minisky::AuthError, /Minisky does not allow sending access tokens/
+            )
+          end
+
+          WebMock.should_not have_requested(:post, url)
+        end
+      end
+
+      context 'with auth: token' do
+        it 'should request that URL' do
+          subject.post_request(url, auth: 'asdasd')
+
+          WebMock.should have_requested(:post, url).once.with(headers: { 'Authorization' => 'Bearer asdasd' })
+        end
       end
     end
 
     context 'if the method name is a URI object' do
-      it 'should request that URL' do
-        stub_request(:post, "https://app.example.com/create").to_return(response)
+      context 'with auth: false' do
+        it 'should request that URI' do
+          subject.post_request(URI(url), auth: false)
 
-        subject.post_request(URI("https://app.example.com/create"))
+          WebMock.should have_requested(:post, url).once
+        end
+      end
 
-        WebMock.should have_requested(:post, "https://app.example.com/create").once
+      context 'with auth: true' do
+        it 'should raise an AuthError' do
+          expect { subject.post_request(URI(url), auth: true) }.to raise_error(
+            Minisky::AuthError, /Minisky does not allow sending access tokens/
+          )
+
+          if subject.send_auth_headers
+            expect { subject.post_request(URI(url)) }.to raise_error(
+              Minisky::AuthError, /Minisky does not allow sending access tokens/
+            )
+          end
+
+          WebMock.should_not have_requested(:post, url)
+        end
+
+        it 'should not log in or refresh tokens beforehand' do
+          subject.auto_manage_tokens = true
+          subject.expects(:check_access).never
+
+          expect { subject.post_request(url, auth: true) }.to raise_error(Minisky::AuthError)
+        end
+      end
+
+      context 'with auth: token' do
+        it 'should request that URI' do
+          subject.post_request(URI(url), auth: 'asdasd')
+
+          WebMock.should have_requested(:post, url).once.with(headers: { 'Authorization' => 'Bearer asdasd' })
+        end
       end
     end
   end
