@@ -49,7 +49,7 @@ class Minisky
     @config_file = config_file
 
     if @config_file
-      @config = YAML.load(File.read(@config_file))
+      @config = YAML.safe_load(File.read(@config_file))
 
       raise AuthError, "Missing user id in the config file #{@config_file}" if user.id.nil?
       raise AuthError, "Missing password in the config file #{@config_file}" if user.pass.nil?
