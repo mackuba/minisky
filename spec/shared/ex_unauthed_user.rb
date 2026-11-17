@@ -1,3 +1,5 @@
+require_relative 'ex_proxy_to'
+
 shared_examples "unauthenticated user" do
   let(:host) { subject.host }
   let(:expected_auth) { nil }
@@ -197,4 +199,5 @@ shared_examples "unauthenticated user" do
   include_examples "get_request", include_auth_tests: false
   include_examples "post_request", include_auth_tests: false
   include_examples "fetch_all", include_auth_tests: false
+  include_examples "atproto-proxy"
 end

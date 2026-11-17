@@ -1,3 +1,10 @@
+## Unreleased
+
+* added `#get` and `#post` as aliases to `#get_request` & `#post_request`
+* added `proxy(to:)` helper for configuring automatic `atproto-proxy` header
+* dropped support for email addresses in the `id` field in `config.yml`
+* prevent sending auth tokens accidentally to different hosts unless explicitly opted in
+
 ## [0.5.2] – 2026-11-09
 
 * added `:timeout` option which is passed to `:open_timeout` & `:read_timeout` on requests

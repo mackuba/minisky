@@ -1,6 +1,7 @@
 require_relative 'ex_get_request'
 require_relative 'ex_post_request'
 require_relative 'ex_fetch_all'
+require_relative 'ex_proxy_to'
 
 shared_examples "authenticated user" do |host|
   let(:host) { host }
@@ -297,4 +298,5 @@ shared_examples "authenticated user" do |host|
   include_examples "get_request", include_auth_tests: true
   include_examples "post_request", include_auth_tests: true
   include_examples "fetch_all", include_auth_tests: true
+  include_examples "atproto-proxy"
 end

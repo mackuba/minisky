@@ -33,8 +33,23 @@ class Minisky
     end
   end
 
+  DOMAIN_SEGMENT = /[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?/
+  LAST_DOMAIN_SEGMENT = /[a-zA-Z](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?/
+  NSID_NAME = /[a-zA-Z][a-zA-Z0-9]{0,62}/
+  NSID_AUTHORITY = /#{LAST_DOMAIN_SEGMENT}(?:\.#{DOMAIN_SEGMENT})*/
+  NSID_PREFIX_REGEXP = /\A(?=.{1,253}\z)#{NSID_AUTHORITY}\z/
+
   # Regexp for NSID identifiers, used in lexicon names for record collection and API endpoints
-  NSID_REGEXP = /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z]{0,61}[a-zA-Z])?)$/
+  NSID_REGEXP = /\A(?=.{1,253}\.#{NSID_NAME}\z)#{NSID_AUTHORITY}\.#{DOMAIN_SEGMENT}\.#{NSID_NAME}\z/
+
+  DID_PLC_REGEXP = /\Adid:plc:[a-z2-7]{24}\z/
+  DID_WEB_REGEXP = /\Adid:web:(?=.{1,253}\z)(?:(?:#{DOMAIN_SEGMENT}\.)+#{LAST_DOMAIN_SEGMENT}|localhost(?:%3[aA][1-9][0-9]{0,4})?)\z/
+
+  # An RFC 3986 fragment with at least one character.
+  SERVICE_ID_REGEXP = %r{\A(?:[a-zA-Z0-9._~!$&'()*+,;=:@/?-]|%[a-fA-F0-9]{2})+\z}
+
+  private_constant :DOMAIN_SEGMENT, :LAST_DOMAIN_SEGMENT, :NSID_NAME, :NSID_AUTHORITY,
+                   :NSID_PREFIX_REGEXP, :SERVICE_ID_REGEXP
 
   #
   # This module contains most of the Minisky code for making HTTP requests and managing
@@ -98,6 +113,18 @@ class Minisky
       instance_variable_defined?('@auto_manage_tokens') ? @auto_manage_tokens : (config != nil)
     end
 
+    # List of configured `atproto-proxy` services - the keys are Regexps that match an endpoint NSID,
+    # and the values are service IDs (in full form with DID) to set in the header if the endpoint matches.
+    #
+    # Configure this list through the {#proxy} method. The *first matching* service is accepted when looking up
+    # an endpoint during a request.
+    #
+    # The list is mutable, so you can also do e.g. `proxy_services.clear` if needed.
+    #
+    def proxy_services
+      @proxy_services ||= {}
+    end
+
     alias progress default_progress
     alias progress= default_progress=
 
@@ -113,7 +140,38 @@ class Minisky
       @user ||= config && User.new(config)
     end
 
+    # Configures the client to add an `atproto-proxy` header to proxy requests to a given service when making
+    # a request to a given endpoint or a group of endpoints. The endpoint is either a fixed NSID, or a prefix
+    # ending with a `.*` wildcard; the service is a full service ID.
+    #
+    # The *first matching rule* is used when looking up services while sending a request.
+    #
+    # @example
+    #   minisky.proxy('app.bsky.*', to: 'did:web:api.bsky.app#bsky_appview')
+    #
+    # @param nsid_prefix [String] a full NSID or a namespace prefix ending in `.*`
+    # @param to [String] a service DID followed by `#` and the service ID
+    # @raise [ArgumentError] if the NSID pattern or service reference is invalid
+    #
+    def proxy(nsid_prefix, to:)
+      regexp = proxy_regexp(nsid_prefix)
+      service = to
+
+      unless valid_proxy_service?(service)
+        raise ArgumentError, "Invalid proxy service #{service.inspect} (expected a DID + '#' + a service ID)"
+      end
+
+      proxy_services[regexp] = service
+    end
+
     # Sends a GET request to the service's API.
+    #
+    # Request is sent to a given endpoint on the configured host or to a custom URL, and params from the passed
+    # hash are appended as query parameters to the URL. Adds the specified custom headers, and depending on the config
+    # and the `auth:` parameter, authentication header may be added too.
+    #
+    # If `method` is an endpoint NSID and any proxy services are configured through {#proxy} that match the
+    # endpoint name, the `atproto-proxy` header is added to proxy the request to the given service.
     #
     # @param method [String, URI] an XRPC endpoint name or a full URL
     # @param params [Hash, nil] query parameters
@@ -150,13 +208,15 @@ class Minisky
         check_access if auto_manage_tokens
       end
 
-      headers = authentication_header(auth).merge(headers || {})
+      req_headers = authentication_header(auth)
+      req_headers.merge!(proxy_headers(method)) if method.is_a?(String) && method =~ NSID_REGEXP
+      req_headers.merge!(headers || {})
 
       if params && !params.empty?
         uri.query = URI.encode_www_form(params)
       end
 
-      request = Net::HTTP::Get.new(uri, headers)
+      request = Net::HTTP::Get.new(uri, req_headers)
 
       response = make_request(request)
       handle_response(response)
@@ -168,6 +228,16 @@ class Minisky
     end
 
     # Sends a POST request to the service's API.
+    #
+    # Request is sent to a given endpoint on the configured host or to a custom URL. If `params:` option is passed
+    # with a params hash, those params are appended as query parameters to the URL.
+    #
+    # If `data` is a String, it's sent as a body; if it's a Hash, it's encoded to JSON and the Content-Type is set
+    # to `"application/json"` (unless a different content type is set explicitly in the `headers:`).
+    #
+    # Adds the specified custom headers, and depending on the config and the `auth:` parameter, authentication header
+    # may be added too. If `method` is an endpoint NSID and any proxy services are configured through {#proxy} that
+    # match the endpoint name, the `atproto-proxy` header is added to proxy the request to the given service.
     #
     # @param method [String, URI] an XRPC endpoint name or a full URL
     # @param data [Hash, String, nil] JSON or string data to send
@@ -211,20 +281,25 @@ class Minisky
         check_access if auto_manage_tokens
       end
 
-      headers = authentication_header(auth).merge(headers || {})
+      req_headers = authentication_header(auth)
+      req_headers.merge!(proxy_headers(method)) if method.is_a?(String) && method =~ NSID_REGEXP
+      req_headers.merge!(headers || {})
 
       if data.is_a?(String) || data.nil?
         body = data.to_s
       else
         body = data.to_json
-        headers["Content-Type"] = "application/json" unless headers.keys.any? { |k| k.to_s.downcase == 'content-type' }
+
+        if req_headers.none? { |k, v| k.to_s.downcase == 'content-type' }
+          req_headers["Content-Type"] = "application/json"
+        end
       end
 
       if params && !params.empty?
         uri.query = URI.encode_www_form(params)
       end
 
-      request = Net::HTTP::Post.new(uri, headers)
+      request = Net::HTTP::Post.new(uri, req_headers)
       request.body = body
 
       response = make_request(request)
@@ -240,6 +315,12 @@ class Minisky
     # cursor after each page, until the cursor is nil or a break condition is met. The data is
     # extracted from a designated field of the response (`field`) and added to a single array,
     # which is returned at the end.
+    #
+    # Any params from the passed hash are appended as query parameters to the URL. Adds the specified custom headers,
+    # and depending on the config and the `auth:` parameter, authentication header may be added too.
+    #
+    # If `method` is an endpoint NSID and any proxy services are configured through {#proxy} that match the
+    # endpoint name, the `atproto-proxy` header is added to proxy the request to the given service.
     #
     # A condition for when the fetching should stop can be passed as a block in `break_when`, or
     # alternatively, a max number of pages can be passed to `max_pages` (or both together). If
@@ -595,6 +676,35 @@ class Minisky
       else
         {}
       end
+    end
+
+    def proxy_regexp(prefix)
+      if prefix.is_a?(String) && prefix.ascii_only?
+        if prefix.end_with?('.*')
+          prefix = prefix.delete_suffix('.*')
+          return %r{\A#{Regexp.escape(prefix)}\..+\z} if prefix =~ NSID_PREFIX_REGEXP
+        elsif prefix =~ NSID_REGEXP
+          return %r{\A#{Regexp.escape(prefix)}\z}
+        end
+      end
+
+      raise ArgumentError, "Invalid proxy NSID pattern #{prefix.inspect} (expected an NSID or a prefix ending with .*)"
+    end
+
+    def valid_proxy_service?(service)
+      return false unless service.is_a?(String) && service.ascii_only?
+
+      did, id = service.split('#', 2)
+
+      (did =~ DID_PLC_REGEXP || did =~ DID_WEB_REGEXP) && (id =~ SERVICE_ID_REGEXP)
+    end
+
+    def proxy_headers(method)
+      if service = proxy_services.detect { |k, v| method =~ k }
+        return { 'atproto-proxy' => service[1] }
+      end
+
+      {}
     end
 
     def validate_fetch_all_response(response, field)
